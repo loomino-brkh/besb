@@ -1,0 +1,65 @@
+# Project specific
+support/db_data/
+support/redis_data/
+support/pgadmin/
+support/token
+support/venv/
+support/logs/
+support/*.log
+support/secrets.env
+support/backups/
+support/env.conf
+support/secrets.env
+django_auth/static/
+
+# Python
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+log/
+logs/
+
+# Database
+*.sqlite3
+*.db
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Alembic
+versions/

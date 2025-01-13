@@ -1,0 +1,46 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from fastapi_limiter import FastAPILimiter
+from redis import asyncio as aioredis
+from sqlmodel import SQLModel
+import os
+import uvicorn
+from database.db import engine
+from endpoints import todos, absen_pengajian
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.on_event("startup")
+async def startup():
+    try:
+        # Create database tables
+        SQLModel.metadata.create_all(engine)
+
+        # Initialize Redis using container name
+        redis = aioredis.from_url(f"redis://{os.getenv('REDIS_CONTAINER_NAME', 'localhost')}:6379", encoding="utf8", decode_responses=True)
+        await FastAPILimiter.init(redis)
+        FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
+    except Exception as e:
+        print(f"Startup error: {e}")
+        raise
+
+# Include routers
+app.include_router(todos.router, prefix="/todos", tags=["todos"])
+app.include_router(absen_pengajian.router, prefix="/absen-pengajian", tags=["absen-pengajian"])
+
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
