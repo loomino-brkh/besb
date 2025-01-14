@@ -3,8 +3,8 @@ from sqlmodel import Session, select
 from fastapi.concurrency import run_in_threadpool
 from typing import List
 from datetime import datetime, date, timedelta
-from core.absen_schema import AbsenPengajian, AbsenPengajianCreate, AbsenPengajianRead
-from database.db import get_db
+from schema.absen_schema import AbsenPengajian, AbsenPengajianCreate, AbsenPengajianRead
+from core.db import get_db
 from core.auth import verify_token
 
 router = APIRouter()

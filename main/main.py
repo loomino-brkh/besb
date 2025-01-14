@@ -7,7 +7,7 @@ from redis import asyncio as aioredis
 from sqlmodel import SQLModel
 import os
 import uvicorn
-from database.db import engine
+from core.db import engine
 from endpoints import todos, absen_pengajian
 
 app = FastAPI()

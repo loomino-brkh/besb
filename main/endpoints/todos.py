@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlmodel import Session, select
 from typing import List
-from core.todos_schema import Todo, TodoCreate, TodoRead
-from database.db import get_db
+from schema.todos_schema import Todo, TodoCreate, TodoRead
+from core.db import get_db
 from core.auth import verify_token
 
 router = APIRouter()
