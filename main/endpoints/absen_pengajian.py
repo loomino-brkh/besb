@@ -58,7 +58,8 @@ async def create_absen(
 @router.get("/", response_model=List[AbsenPengajianRead], dependencies=[Depends(verify_read_permission)])
 async def list_absen(
     tanggal: str = None,
-    acara: str = None
+    acara: str = None,
+    lokasi: str = None
 ):
     try:
         with get_db() as db:
@@ -80,6 +81,9 @@ async def list_absen(
             
             if acara:
                 query = query.filter(AbsenPengajian.acara == acara)
+            
+            if lokasi:
+                query = query.filter(AbsenPengajian.lokasi == lokasi)
             
             absen_list = db.exec(query).all()
             # Convert to response model to ensure we have all data before session closes
