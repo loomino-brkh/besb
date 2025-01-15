@@ -55,7 +55,7 @@ async def create_absen(
             detail=f"An error occurred: {str(e)}"
         )
 
-@router.get("/", response_model=List[AbsenPengajianRead], dependencies=[Depends(verify_auth)])
+@router.get("/", response_model=List[AbsenPengajianRead], dependencies=[Depends(verify_read_permission)])
 async def list_absen(
     tanggal: str = None,
     acara: str = None
