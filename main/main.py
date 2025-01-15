@@ -8,7 +8,7 @@ from sqlmodel import SQLModel
 import os
 import uvicorn
 from core.db import engine
-from endpoints import todos, absen_pengajian, absen_asramaan
+from endpoints import absen_pengajian, absen_asramaan
 
 app = FastAPI(
     docs_url=None,  # Disable Swagger UI
@@ -38,8 +38,6 @@ async def startup():
         print(f"Startup error: {e}")
         raise
 
-# Include routers
-app.include_router(todos.router, prefix="/todos", tags=["todos"])
 app.include_router(absen_pengajian.router, prefix="/absen-pengajian", tags=["absen-pengajian"])
 app.include_router(absen_asramaan.router, prefix="/absen-asramaan", tags=["absen-asramaan"])
 
