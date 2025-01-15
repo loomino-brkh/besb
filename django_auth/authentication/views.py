@@ -46,3 +46,35 @@ def verify_token(request):
 def cached_view(request):
     # This is just an example of a view that uses Django's cache_page decorator
     return Response({'message': 'This response is cached for 15 minutes'})
+
+@api_view(['POST'])
+def refresh_token(request):
+    refresh_token = request.data.get('refresh')
+    if not refresh_token:
+        return Response({'error': 'Refresh token is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Rate limiting: Allow only 5 refresh attempts per token in 15 minutes
+    cache_key = f'refresh_attempt_{refresh_token[:32]}'  # Use first 32 chars of token as key
+    attempts = cache.get(cache_key, 0)
+    if attempts >= 5:
+        return Response({
+            'error': 'Too many refresh attempts. Please wait before trying again.'
+        }, status=status.HTTP_429_TOO_MANY_REQUESTS)
+    
+    try:
+        refresh = RefreshToken(refresh_token)
+        # Increment the attempts counter
+        cache.set(cache_key, attempts + 1, timeout=60 * 15)  # 15 minutes expiry
+        
+        return Response({
+            'access': str(refresh.access_token),
+            'refresh': str(refresh)  # New refresh token
+        })
+    except TokenError:
+        return Response({
+            'error': 'Invalid or expired refresh token'
+        }, status=status.HTTP_401_UNAUTHORIZED)
+    except Exception as e:
+        return Response({
+            'error': 'An error occurred while refreshing token'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
