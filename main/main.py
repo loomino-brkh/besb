@@ -10,7 +10,11 @@ import uvicorn
 from core.db import engine
 from endpoints import todos, absen_pengajian
 
-app = FastAPI()
+app = FastAPI(
+    docs_url=None,  # Disable Swagger UI
+    redoc_url=None,  # Disable ReDoc
+    openapi_url=None  # Disable OpenAPI schema
+)
 
 app.add_middleware(
     CORSMiddleware,
