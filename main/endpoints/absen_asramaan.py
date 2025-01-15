@@ -1,0 +1,118 @@
+from fastapi import APIRouter, HTTPException, Depends, Form
+from sqlmodel import Session, select
+from fastapi.concurrency import run_in_threadpool
+from typing import List
+from datetime import datetime, date, timedelta
+from schema.absen_asramaan_schema import AbsenAsramaan, AbsenAsramaanCreate, AbsenAsramaanRead
+from core.db import get_db
+from core.auth import verify_read_permission, verify_write_permission
+
+router = APIRouter()
+
+@router.post("/", response_model=AbsenAsramaanRead, dependencies=[Depends(verify_write_permission)])
+async def create_absen(
+    acara: str = Form(),
+    tanggal: str = Form(),
+    jam_hadir: str = Form(),
+    nama: str = Form(),
+    lokasi: str = Form(),
+    ranah: str = Form(),
+    detail_ranah: str = Form(),
+    sesi: str = Form()
+):
+    try:
+        # Convert string date to datetime
+        tanggal_dt = datetime.strptime(tanggal, '%Y-%m-%d')
+        
+        # Create AbsenAsramaan instance
+        db_absen = AbsenAsramaan(
+            acara=acara,
+            tanggal=tanggal_dt,
+            jam_hadir=jam_hadir,
+            nama=nama,
+            lokasi=lokasi,
+            ranah=ranah,
+            detail_ranah=detail_ranah,
+            sesi=sesi
+        )
+        
+        # Use the database session in a context manager
+        with get_db() as db:
+            db.add(db_absen)
+            db.commit()
+            db.refresh(db_absen)
+            # Create a copy of the data before session closes
+            result = AbsenAsramaanRead.from_orm(db_absen)
+        
+        return result
+        
+    except ValueError as e:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Invalid date or time format. Date should be YYYY-MM-DD and time should be HH:MM. Error: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"An error occurred: {str(e)}"
+        )
+
+@router.get("/", response_model=List[AbsenAsramaanRead], dependencies=[Depends(verify_read_permission)])
+async def list_absen(
+    tanggal: str = None,
+    acara: str = None,
+    sesi: str = None
+):
+    try:
+        with get_db() as db:
+            query = select(AbsenAsramaan)
+            
+            # Apply filters if parameters are provided
+            if tanggal:
+                try:
+                    # Convert string date to datetime for comparison
+                    filter_date = datetime.strptime(tanggal, '%Y-%m-%d')
+                    # Compare only the date part
+                    query = query.filter(AbsenAsramaan.tanggal >= filter_date,
+                                      AbsenAsramaan.tanggal < filter_date + timedelta(days=1))
+                except ValueError:
+                    raise HTTPException(
+                        status_code=422,
+                        detail="Invalid date format. Date should be YYYY-MM-DD"
+                    )
+            
+            if acara:
+                query = query.filter(AbsenAsramaan.acara == acara)
+                
+            if sesi:
+                query = query.filter(AbsenAsramaan.sesi == sesi)
+            
+            absen_list = db.exec(query).all()
+            # Convert to response model to ensure we have all data before session closes
+            result = [AbsenAsramaanRead.from_orm(absen) for absen in absen_list]
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"An error occurred: {str(e)}"
+        )
+
+@router.get("/{absen_id}", response_model=AbsenAsramaanRead, dependencies=[Depends(verify_read_permission)])
+async def get_absen(absen_id: int):
+    try:
+        with get_db() as db:
+            absen = db.get(AbsenAsramaan, absen_id)
+            if absen is None:
+                raise HTTPException(status_code=404, detail="Absen record not found")
+            # Convert to response model before session closes
+            result = AbsenAsramaanRead.from_orm(absen)
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"An error occurred: {str(e)}"
+        )
