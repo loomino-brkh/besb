@@ -93,7 +93,7 @@ async def list_absen(
             detail=f"An error occurred: {str(e)}"
         )
 
-@router.get("/{absen_id}", response_model=AbsenPengajianRead, dependencies=[Depends(verify_token)])
+@router.get("/{absen_id}", response_model=AbsenPengajianRead, dependencies=[Depends(verify_auth)])
 async def get_absen(absen_id: int):
     try:
         with get_db() as db:
