@@ -40,12 +40,6 @@ def verify_token(request):
 
     return Response({'status': 'valid', 'cached': False})
 
-@api_view(['GET'])
-@cache_page(60 * 15)  # Cache this view for 15 minutes
-def cached_view(request):
-    # This is just an example of a view that uses Django's cache_page decorator
-    return Response({'message': 'This response is cached for 15 minutes'})
-
 @api_view(['POST'])
 def refresh_token(request):
     refresh_token = request.data.get('refresh')
