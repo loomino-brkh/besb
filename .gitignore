@@ -12,6 +12,7 @@ support/env.conf
 support/secrets.env
 django_auth/static/
 django_auth/authentication/migrations/
+main/migrations/
 
 # Python
 __pycache__/
