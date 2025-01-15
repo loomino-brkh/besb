@@ -66,3 +66,4 @@ Thumbs.db
 # Alembic
 versions/
 .aider*
+.vscode/
