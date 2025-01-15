@@ -11,6 +11,7 @@ support/backups/
 support/env.conf
 support/secrets.env
 django_auth/static/
+django_auth/authentication/migrations/
 
 # Python
 __pycache__/
