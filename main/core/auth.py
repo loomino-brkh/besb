@@ -1,10 +1,10 @@
 from fastapi import HTTPException, Header, Depends
-from typing import Optional
+from typing import Optional, Dict
 import os
 import httpx
 import hashlib
 
-async def verify_api_key(authorization: str = Header(None)):
+async def verify_api_key(authorization: str = Header(None)) -> Dict:
     if not authorization:
         raise HTTPException(status_code=401, detail="No API key provided")
 
@@ -31,7 +31,7 @@ async def verify_api_key(authorization: str = Header(None)):
             detail=f"Authentication service unavailable: {str(e)}"
         )
 
-async def verify_token(authorization: str = Header(None)):
+async def verify_token(authorization: str = Header(None)) -> Dict:
     if not authorization:
         raise HTTPException(status_code=401, detail="No authorization provided")
 
@@ -57,7 +57,10 @@ async def verify_token(authorization: str = Header(None)):
                         status_code=401,
                         detail=f"Invalid token: {response.text}"
                     )
-                return response.json()
+                # For Bearer tokens, we grant full permissions
+                result = response.json()
+                result["permission"] = "read_write"
+                return result
         except httpx.RequestError as e:
             raise HTTPException(
                 status_code=503,
@@ -71,6 +74,26 @@ async def verify_token(authorization: str = Header(None)):
             detail="Invalid authorization type. Use 'Bearer' or 'ApiKey'"
         )
 
-async def verify_auth(authorization: str = Header(None)):
-    """Combined authentication that accepts either token or API key"""
-    return await verify_token(authorization)
+async def verify_read_permission(authorization: str = Header(None)) -> Dict:
+    """Verifies if the token/key has read permission"""
+    auth_data = await verify_token(authorization)
+    permission = auth_data.get("permission", "")
+    
+    if permission not in ["read_only", "read_write"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Insufficient permissions. Read access required."
+        )
+    return auth_data
+
+async def verify_write_permission(authorization: str = Header(None)) -> Dict:
+    """Verifies if the token/key has write permission"""
+    auth_data = await verify_token(authorization)
+    permission = auth_data.get("permission", "")
+    
+    if permission not in ["write_only", "read_write"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Insufficient permissions. Write access required."
+        )
+    return auth_data
