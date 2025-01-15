@@ -5,7 +5,7 @@ from typing import List
 from datetime import datetime, date, timedelta
 from schema.absen_schema import AbsenPengajian, AbsenPengajianCreate, AbsenPengajianRead
 from core.db import get_db
-from core.auth import verify_auth, verify_token
+from core.auth import verify_read_permission, verify_write_permission
 
 router = APIRouter()
 
