@@ -25,7 +25,7 @@ def login(request):
     return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, LocalhostOnly])
 def verify_token(request):
     user_id = request.user.id
     cache_key = f'token_valid_{user_id}'
