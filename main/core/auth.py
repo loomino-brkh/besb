@@ -1,6 +1,8 @@
-from fastapi import HTTPException, Header
+from fastapi import HTTPException, Header, Depends
+from typing import Optional
 import os
 import httpx
+import hashlib
 
 async def verify_token(authorization: str = Header(None)):
     if not authorization:
