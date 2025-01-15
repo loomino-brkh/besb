@@ -9,7 +9,7 @@ from core.auth import verify_read_permission, verify_write_permission
 
 router = APIRouter()
 
-@router.post("/", response_model=AbsenPengajianRead, dependencies=[Depends(verify_auth)])
+@router.post("/", response_model=AbsenPengajianRead, dependencies=[Depends(verify_write_permission)])
 async def create_absen(
     acara: str = Form(),
     tanggal: str = Form(),
