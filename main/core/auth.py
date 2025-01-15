@@ -15,7 +15,7 @@ async def verify_api_key(authorization: str = Header(None)):
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"http://localhost:8001/auth/verify-apikey/",
+                f"http://localhost:8001/auth/apikeys/verify/",
                 json={"api_key": api_key},
                 headers={"Host": "localhost"}
             )
@@ -67,7 +67,7 @@ async def verify_token(authorization: str = Header(None)):
         return await verify_api_key(authorization)
     else:
         raise HTTPException(
-            status_code=401,
+            status_code=401, 
             detail="Invalid authorization type. Use 'Bearer' or 'ApiKey'"
         )
 
