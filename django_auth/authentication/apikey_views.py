@@ -35,6 +35,8 @@ class APIKeyRevokeView(generics.DestroyAPIView):
             raise NotFound("API Key not found.")
 
 class APIKeyVerifyView(APIView):
+    permission_classes = [LocalhostOnly]
+    
     def post(self, request):
         api_key = request.data.get('api_key')
         if not api_key:
