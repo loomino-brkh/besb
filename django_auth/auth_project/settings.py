@@ -79,7 +79,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-LANGUAGE_CODE = 'id-id'
+LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Asia/Jakarta'
 USE_I18N = True
 USE_TZ = True
@@ -98,8 +98,8 @@ REST_FRAMEWORK = {
 
 SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(minutes=75),
 }
 
 CACHES = {
@@ -112,6 +112,25 @@ CACHES = {
     }
 }
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    'https://ppg.brkh.work',
+    'https://absen.brkh.work',
+    'https://api.var.my.id',
+    'https://educto.brkh.work',
+]
 
-CSRF_TRUSTED_ORIGINS = ['https://api.var.my.id']
+CSRF_TRUSTED_ORIGINS = [
+    'https://ppg.brkh.work',
+    'https://absen.brkh.work',
+    'https://api.var.my.id',
+    'https://educto.brkh.work',
+]
+
+CORS_ALLOW_CREDENTIALS = True
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SECURE = True
+CSRF_USE_SESSIONS = True
+CSRF_COOKIE_NAME = 'csrftoken'
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SECURE = True
