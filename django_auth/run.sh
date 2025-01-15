@@ -17,6 +17,9 @@ EOF
 # Collect static files
 python manage.py collectstatic --noinput
 
+# Ensure logs directory exists
+mkdir -p /app/support/logs
+
 # Run with gunicorn
 exec gunicorn auth_project.wsgi:application \
     --bind 0.0.0.0:8001 \
@@ -24,11 +27,9 @@ exec gunicorn auth_project.wsgi:application \
     --threads 2 \
     --worker-class gthread \
     --worker-tmp-dir /dev/shm \
-    --access-logfile /app/support/logs/gunicorn-access.log \
-    --error-logfile /app/support/logs/gunicorn-error.log \
+    --access-logfile - \
+    --error-logfile - \
     --log-level=debug \
     --access-logformat='%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s" %(L)s %(p)s "%(M)s"' \
-    --capture-output \
-    --enable-stdio-inheritance \
     --forwarded-allow-ips='*' \
     --reload
