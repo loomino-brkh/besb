@@ -9,6 +9,26 @@ from core.auth import verify_read_permission, verify_write_permission
 
 router = APIRouter()
 
+async def check_duplicate_asramaan(db: Session, acara: str, tanggal: datetime, nama: str, lokasi: str, ranah: str, detail_ranah: str, sesi: str) -> bool:
+    # Get the time window (2 hours before and after current time)
+    time_window_start = tanggal - timedelta(hours=2)
+    time_window_end = tanggal + timedelta(hours=2)
+    
+    # Query for duplicates within time window
+    query = select(AbsenAsramaan).where(
+        AbsenAsramaan.acara == acara,
+        AbsenAsramaan.nama == nama,
+        AbsenAsramaan.lokasi == lokasi,
+        AbsenAsramaan.ranah == ranah,
+        AbsenAsramaan.detail_ranah == detail_ranah,
+        AbsenAsramaan.sesi == sesi,
+        AbsenAsramaan.tanggal >= time_window_start,
+        AbsenAsramaan.tanggal <= time_window_end
+    )
+    
+    result = db.exec(query).first()
+    return result is not None
+
 @router.post("/", response_model=AbsenAsramaanRead, dependencies=[Depends(verify_write_permission)])
 async def create_absen(
     acara: str = Form(),
