@@ -24,5 +24,17 @@ async def get_data_by_daerah(
         # Convert result into list of dictionaries with only ranah and detail_ranah
         return [{"ranah": item[0], "detail_ranah": item[1]} for item in data]
         
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        import traceback
+        error_details = {
+            "error_type": type(e).__name__,
+            "error_message": str(e),
+            "traceback": traceback.format_exc()
+        }
+        print("Database Error Details:", error_details)  # For logging
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database error: {error_details['error_type']} - {error_details['error_message']}"
+        )
