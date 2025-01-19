@@ -9,6 +9,25 @@ from core.auth import verify_read_permission, verify_write_permission
 
 router = APIRouter()
 
+async def check_duplicate_pengajian(db: Session, acara: str, tanggal: datetime, nama: str, lokasi: str, ranah: str, detail_ranah: str) -> bool:
+    # Get the time window (2 hours before and after current time)
+    time_window_start = tanggal - timedelta(hours=2)
+    time_window_end = tanggal + timedelta(hours=2)
+    
+    # Query for duplicates within time window
+    query = select(AbsenPengajian).where(
+        AbsenPengajian.acara == acara,
+        AbsenPengajian.nama == nama,
+        AbsenPengajian.lokasi == lokasi,
+        AbsenPengajian.ranah == ranah,
+        AbsenPengajian.detail_ranah == detail_ranah,
+        AbsenPengajian.tanggal >= time_window_start,
+        AbsenPengajian.tanggal <= time_window_end
+    )
+    
+    result = db.exec(query).first()
+    return result is not None
+
 @router.post("/", response_model=AbsenPengajianRead, dependencies=[Depends(verify_write_permission)])
 async def create_absen(
     acara: str = Form(),
