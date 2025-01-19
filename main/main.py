@@ -8,7 +8,7 @@ from sqlmodel import SQLModel
 import os
 import uvicorn
 from core.db import engine
-from endpoints import absen_pengajian, absen_asramaan
+from endpoints import absen_pengajian, absen_asramaan, data_daerah
 
 app = FastAPI(
     docs_url=None, 
