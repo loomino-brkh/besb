@@ -37,9 +37,10 @@ async def startup():
     except Exception as e:
         print(f"Startup error: {e}")
         raise
-
 app.include_router(absen_pengajian.router, prefix="/absen-pengajian", tags=["absen-pengajian"])
 app.include_router(absen_asramaan.router, prefix="/absen-asramaan", tags=["absen-asramaan"])
+app.include_router(data_daerah.router, prefix="/data", tags=["data-daerah"])
+
 
 @app.get("/")
 async def root():
