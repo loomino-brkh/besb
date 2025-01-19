@@ -41,23 +41,42 @@ async def create_absen(
     sesi: str = Form()
 ):
     try:
-        # Convert string date to datetime
+        # Convert string date to datetime and add time component from jam_hadir
         tanggal_dt = datetime.strptime(tanggal, '%Y-%m-%d')
-        
-        # Create AbsenAsramaan instance
-        db_absen = AbsenAsramaan(
-            acara=acara,
-            tanggal=tanggal_dt,
-            jam_hadir=jam_hadir,
-            nama=nama,
-            lokasi=lokasi,
-            ranah=ranah,
-            detail_ranah=detail_ranah,
-            sesi=sesi
-        )
+        full_dt = datetime.combine(tanggal_dt.date(), datetime.strptime(jam_hadir, '%H:%M').time())
         
         # Use the database session in a context manager
         with get_db() as db:
+            # Check for duplicates
+            is_duplicate = await check_duplicate_asramaan(
+                db=db,
+                acara=acara,
+                tanggal=full_dt,
+                nama=nama,
+                lokasi=lokasi,
+                ranah=ranah,
+                detail_ranah=detail_ranah,
+                sesi=sesi
+            )
+            
+            if is_duplicate:
+                raise HTTPException(
+                    status_code=409,
+                    detail="Duplicate entry detected: Similar attendance record exists within 2 hours"
+                )
+            
+            # Create AbsenAsramaan instance
+            db_absen = AbsenAsramaan(
+                acara=acara,
+                tanggal=full_dt,
+                jam_hadir=jam_hadir,
+                nama=nama,
+                lokasi=lokasi,
+                ranah=ranah,
+                detail_ranah=detail_ranah,
+                sesi=sesi
+            )
+            
             db.add(db_absen)
             db.commit()
             db.refresh(db_absen)
