@@ -52,8 +52,7 @@ async_engine = create_async_engine(
     pool_recycle=POOL_RECYCLE,
     pool_pre_ping=True,
     connect_args={
-        "timeout": CONNECT_TIMEOUT,
-        "application_name": "fastapi_app_async"
+        "timeout": CONNECT_TIMEOUT
     }
 )
 
