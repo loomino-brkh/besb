@@ -26,7 +26,7 @@ async def get_url(
 @router.post("/")
 def create_url(
     url: str = Form(...),
-    session: Session = Depends(get_db),
+    session: Session = Depends(get_db_dependency),
     _: str = Depends(verify_token),
     _rate_limit: Optional[None] = Depends(RateLimiter(times=10, minutes=1))  # 10 requests per minute
 ) -> URLResponse:
