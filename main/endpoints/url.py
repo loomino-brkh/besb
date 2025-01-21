@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 from typing import Optional
 
 from core.auth import verify_token
-from core.db import get_db
+from core.db import get_db_dependency
 from schema.url_schema import URL, URLCreate, URLResponse
 
 router = APIRouter()
@@ -14,7 +14,7 @@ router = APIRouter()
 @cache(expire=300)  # Cache for 5 minutes
 async def get_url(
     code: str,
-    session: Session = Depends(get_db)
+    session: Session = Depends(get_db_dependency)
 ) -> Optional[URLResponse]:
     """Get the original URL for a given code."""
     statement = select(URL).where(URL.url_code == code)
