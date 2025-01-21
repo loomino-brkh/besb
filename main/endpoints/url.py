@@ -24,7 +24,7 @@ async def get_url(
     return URLResponse(url=result.url, url_code=result.url_code)
 
 @router.post("/")
-async def create_url(
+def create_url(
     url: str = Form(...),
     session: Session = Depends(get_db),
     _: str = Depends(verify_token),
@@ -33,6 +33,4 @@ async def create_url(
     """Create a new shortened URL using form data."""
     db_url = URL(url=url)
     session.add(db_url)
-    session.commit()
-    session.refresh(db_url)
     return URLResponse(url=db_url.url, url_code=db_url.url_code)
