@@ -56,10 +56,11 @@ async_engine = create_async_engine(
     }
 )
 
+@contextmanager
 def get_db() -> Generator[Session, None, None]:
     """
-    Synchronous database session generator with retry mechanism.
-    Designed to work with FastAPI's dependency injection.
+    Synchronous database session generator with retry mechanism and context manager support.
+    Can be used both as a context manager and with FastAPI's dependency injection.
     """
     @retry(
         stop=stop_after_attempt(3),
@@ -84,6 +85,14 @@ def get_db() -> Generator[Session, None, None]:
         raise
     finally:
         db.close()
+
+def get_db_dependency() -> Generator[Session, None, None]:
+    """
+    Dependency injection version of get_db.
+    Use this for FastAPI dependency injection when not using context manager.
+    """
+    with get_db() as session:
+        yield session
 
 async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
     """
