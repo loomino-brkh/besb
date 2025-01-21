@@ -3,7 +3,7 @@ from sqlmodel import select
 from typing import List
 
 from core.db import get_async_db
-from schema.sesi_schema import Sesi
+from schema.sesi_schema import DataSesi
 
 router = APIRouter()
 
@@ -12,7 +12,7 @@ async def get_sesi_by_acara(
     acara: str,
     db=Depends(get_async_db)
 ):
-    query = select(Sesi.sesi).where(Sesi.acara == acara)
+    query = select(DataSesi.sesi).where(DataSesi.acara == acara)
     
     try:
         result = await db.execute(query)
