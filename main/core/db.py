@@ -56,10 +56,10 @@ async_engine = create_async_engine(
     }
 )
 
-@contextmanager
 def get_db() -> Generator[Session, None, None]:
     """
     Synchronous database session generator with retry mechanism.
+    Designed to work with FastAPI's dependency injection.
     """
     @retry(
         stop=stop_after_attempt(3),
@@ -77,6 +77,7 @@ def get_db() -> Generator[Session, None, None]:
     db = _get_session()
     try:
         yield db
+        db.commit()  # Auto-commit if no exception occurred
     except Exception as e:
         logger.error(f"Database session error: {e}")
         db.rollback()
