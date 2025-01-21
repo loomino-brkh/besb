@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 from typing import Optional
 
 from core.auth import verify_token
-from core.db import get_session
+from core.db import get_db
 from schema.url_schema import URL, URLCreate, URLResponse
 
 router = APIRouter()
@@ -14,7 +14,7 @@ router = APIRouter()
 @cache(expire=300)  # Cache for 5 minutes
 async def get_url(
     code: str,
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_db)
 ) -> Optional[URLResponse]:
     """Get the original URL for a given code."""
     statement = select(URL).where(URL.url_code == code)
@@ -26,7 +26,7 @@ async def get_url(
 @router.post("/")
 async def create_url(
     url_data: URLCreate,
-    session: Session = Depends(get_session),
+    session: Session = Depends(get_db),
     _: str = Depends(verify_token),
     _rate_limit: Optional[None] = Depends(RateLimiter(times=10, minutes=1))  # 10 requests per minute
 ) -> URLResponse:
