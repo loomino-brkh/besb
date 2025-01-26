@@ -100,7 +100,8 @@ async def create_absen(
 async def list_absen(
     tanggal: str = None,
     acara: str = None,
-    sesi: str = None
+    sesi: str = None,
+    lokasi: str = None
 ):
     try:
         with get_db() as db:
@@ -125,6 +126,9 @@ async def list_absen(
                 
             if sesi:
                 query = query.filter(AbsenAsramaan.sesi == sesi)
+                
+            if lokasi:
+                query = query.filter(AbsenAsramaan.lokasi == lokasi)
             
             absen_list = db.exec(query).all()
             # Convert to response model to ensure we have all data before session closes
