@@ -118,6 +118,7 @@ CORS_ALLOWED_ORIGINS = [
     'https://api.var.my.id',
     'https://educto.brkh.work',
     'https://devduc.brkh.work',
+    'https://29.brkh.work',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -126,6 +127,7 @@ CSRF_TRUSTED_ORIGINS = [
     'https://api.var.my.id',
     'https://educto.brkh.work',
     'https://devduc.brkh.work',
+    'https://29.brkh.work',
 ]
 
 CORS_ALLOW_CREDENTIALS = True
