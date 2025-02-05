@@ -81,7 +81,7 @@ async def create_absen(
             db.commit()
             db.refresh(db_absen)
             # Create a copy of the data before session closes
-            result = AbsenAsramaanRead.from_orm(db_absen)
+            result = AbsenAsramaanRead.model_validate(db_absen)
         
         return result
         
@@ -132,7 +132,7 @@ async def list_absen(
             
             absen_list = db.exec(query).all()
             # Convert to response model to ensure we have all data before session closes
-            result = [AbsenAsramaanRead.from_orm(absen) for absen in absen_list]
+            result = [AbsenAsramaanRead.model_validate(absen) for absen in absen_list]
         return result
     except HTTPException:
         raise
@@ -150,7 +150,7 @@ async def get_absen(absen_id: int):
             if absen is None:
                 raise HTTPException(status_code=404, detail="Absen record not found")
             # Convert to response model before session closes
-            result = AbsenAsramaanRead.from_orm(absen)
+            result = AbsenAsramaanRead.model_validate(absen)
         return result
     except HTTPException:
         raise
