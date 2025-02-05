@@ -9,6 +9,7 @@ import os
 import uvicorn
 from core.db import engine
 from endpoints import absen_pengajian, absen_asramaan, data_daerah, sesi, url
+from contextlib import asynccontextmanager
 
 app = FastAPI(
     docs_url=None, 
@@ -24,8 +25,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.on_event("startup")
-async def startup():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     try:
         # Create database tables
         SQLModel.metadata.create_all(engine)
@@ -37,6 +38,14 @@ async def startup():
     except Exception as e:
         print(f"Startup error: {e}")
         raise
+    yield
+
+app = FastAPI(
+    docs_url=None, 
+    redoc_url=None,
+    openapi_url=None,
+    lifespan=lifespan
+)
 app.include_router(absen_pengajian.router, prefix="/absen-pengajian", tags=["absen-pengajian"])
 app.include_router(absen_asramaan.router, prefix="/absen-asramaan", tags=["absen-asramaan"])
 app.include_router(data_daerah.router, prefix="/data", tags=["data-daerah"])
