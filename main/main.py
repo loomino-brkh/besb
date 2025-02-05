@@ -11,20 +11,6 @@ from core.db import engine
 from endpoints import absen_pengajian, absen_asramaan, data_daerah, sesi, url
 from contextlib import asynccontextmanager
 
-app = FastAPI(
-    docs_url=None, 
-    redoc_url=None,
-    openapi_url=None
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["https://ngaji.brkh.work", "https://29.brkh.work"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
@@ -46,6 +32,15 @@ app = FastAPI(
     openapi_url=None,
     lifespan=lifespan
 )
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["https://ngaji.brkh.work", "https://29.brkh.work"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(absen_pengajian.router, prefix="/absen-pengajian", tags=["absen-pengajian"])
 app.include_router(absen_asramaan.router, prefix="/absen-asramaan", tags=["absen-asramaan"])
 app.include_router(data_daerah.router, prefix="/data", tags=["data-daerah"])
