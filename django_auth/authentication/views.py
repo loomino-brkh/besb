@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .permissions import LocalhostOnly
+from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenRefreshView
@@ -72,3 +73,63 @@ def refresh_token(request):
         return Response({
             'error': 'An error occurred while refreshing token'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+@permission_classes([LocalhostOnly])
+def verify_user(request):
+    """
+    Endpoint to verify user existence and token ownership.
+    Expects:
+    - user_id: The ID of the user to verify
+    - token: The access token to verify
+    """
+    User = get_user_model()
+    user_id = request.data.get('user_id')
+    token = request.data.get('token')
+
+    if not user_id or not token:
+        return Response({
+            'error': 'Both user_id and token are required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Verify user exists
+        user = User.objects.filter(id=user_id).first()
+        if not user:
+            return Response({
+                'error': 'User not found',
+                'valid': False
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        # Use cache to store verification results
+        cache_key = f'user_verify_{user_id}_{token[:32]}'
+        cached_result = cache.get(cache_key)
+        if cached_result is not None:
+            return Response({
+                'valid': True,
+                'cached': True
+            })
+
+        from rest_framework_simplejwt.tokens import AccessToken
+        token_obj = AccessToken(token)
+        
+        # Verify token belongs to user
+        if token_obj['user_id'] != user_id:
+            return Response({
+                'error': 'Token does not belong to this user',
+                'valid': False
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+        # Cache the successful verification
+        cache.set(cache_key, True, timeout=300)  # Cache for 5 minutes
+
+        return Response({
+            'valid': True,
+            'cached': False
+        })
+
+    except Exception as e:
+        return Response({
+            'error': 'Invalid token',
+            'valid': False
+        }, status=status.HTTP_401_UNAUTHORIZED)
