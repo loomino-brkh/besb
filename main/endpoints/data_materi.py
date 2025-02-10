@@ -52,31 +52,35 @@ async def get_data_by_kategori(
             detail=f"Database error: {error_details['error_type']} - {error_details['error_message']}"
         )
 
-@router.get("/detail/{detail_kategori}")
-async def get_data_by_detail_kategori(
+@router.get("/{kategori}/{detail_kategori}")
+async def get_data_by_kategori_and_detail(
+    kategori: str,
     detail_kategori: str,
     db=Depends(get_async_db)
 ):
     query = select(
         DataMateri.materi,
         DataMateri.detail_materi,
-        DataMateri.kategori,
+        DataMateri.detail_kategori,
         DataMateri.indikator,
         DataMateri.indikator_mulai,
         DataMateri.indikator_akhir
-    ).where(DataMateri.detail_kategori == detail_kategori)
+    ).where(
+        (DataMateri.kategori == kategori) & 
+        (DataMateri.detail_kategori == detail_kategori)
+    )
     
     try:
         result = await db.execute(query)
         data = result.all()
         
         if not data:
-            raise HTTPException(status_code=404, detail=f"No data found for detail_kategori: {detail_kategori}")
+            raise HTTPException(status_code=404, detail=f"No data found for kategori: {kategori} and detail_kategori: {detail_kategori}")
         
         return [{
             "materi": item[0],
             "detail_materi": item[1],
-            "kategori": item[2],
+            "detail_kategori": item[2],
             "indikator": item[3],
             "indikator_mulai": item[4],
             "indikator_akhir": item[5]
