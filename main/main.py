@@ -8,7 +8,7 @@ from sqlmodel import SQLModel
 import os
 import uvicorn
 from core.db import engine
-from endpoints import absen_pengajian, absen_asramaan, data_daerah, sesi, url
+from endpoints import absen_pengajian, absen_asramaan, data_daerah, data_materi, sesi, url
 from contextlib import asynccontextmanager
 
 @asynccontextmanager
@@ -46,6 +46,7 @@ app.include_router(absen_asramaan.router, prefix="/absen-asramaan", tags=["absen
 app.include_router(data_daerah.router, prefix="/data/daerah", tags=["data-daerah"])
 app.include_router(sesi.router, prefix="/sesi", tags=["sesi"])
 app.include_router(url.router, prefix="/url", tags=["url"])
+app.include_router(data_materi.router, prefix="/data/materi", tags=["data-materi"])
 
 
 @app.get("/")
