@@ -1,63 +1,39 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import select
-from typing import List
+from typing import List, Optional
 
 from core.db import get_async_db
 from schema.data_materi_schema import DataMateri
 
 router = APIRouter()
 
-@router.get("/{kategori}")
-async def get_data_by_kategori(
-    kategori: str,
-    db=Depends(get_async_db)
-):
-    query = select(
-        DataMateri.materi,
-        DataMateri.detail_materi,
-        DataMateri.detail_kategori,
-        DataMateri.indikator,
-        DataMateri.indikator_mulai,
-        DataMateri.indikator_akhir
-    ).where(DataMateri.kategori == kategori)
-    
-    try:
-        result = await db.execute(query)
-        data = result.all()
-        
-        if not data:
-            raise HTTPException(status_code=404, detail=f"No data found for kategori: {kategori}")
-        
-        return [{
-            "materi": item[0],
-            "detail_materi": item[1],
-            "detail_kategori": item[2],
-            "indikator": item[3],
-            "indikator_mulai": item[4],
-            "indikator_akhir": item[5]
-        } for item in data]
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        import traceback
-        error_details = {
-            "error_type": type(e).__name__,
-            "error_message": str(e),
-            "traceback": traceback.format_exc()
-        }
-        print("Database Error Details:", error_details)  # For logging
-        raise HTTPException(
-            status_code=500,
-            detail=f"Database error: {error_details['error_type']} - {error_details['error_message']}"
-        )
+async def handle_db_error(e: Exception):
+    """Handle database errors and return appropriate HTTP exception"""
+    import traceback
+    error_details = {
+        "error_type": type(e).__name__,
+        "error_message": str(e),
+        "traceback": traceback.format_exc()
+    }
+    print("Database Error Details:", error_details)  # For logging
+    raise HTTPException(
+        status_code=500,
+        detail=f"Database error: {error_details['error_type']} - {error_details['error_message']}"
+    )
 
-@router.get("/{kategori}/{detail_kategori}")
-async def get_data_by_kategori_and_detail(
-    kategori: str,
-    detail_kategori: str,
-    db=Depends(get_async_db)
-):
+def format_materi_response(items):
+    """Format database results into response structure"""
+    return [{
+        "materi": item[0],
+        "detail_materi": item[1],
+        "detail_kategori": item[2],
+        "indikator": item[3],
+        "indikator_mulai": item[4],
+        "indikator_akhir": item[5]
+    } for item in items]
+
+def build_query(kategori: str, detail_kategori: Optional[str] = None):
+    """Build the database query based on provided parameters"""
     query = select(
         DataMateri.materi,
         DataMateri.detail_materi,
@@ -65,38 +41,35 @@ async def get_data_by_kategori_and_detail(
         DataMateri.indikator,
         DataMateri.indikator_mulai,
         DataMateri.indikator_akhir
-    ).where(
-        (DataMateri.kategori == kategori) & 
-        (DataMateri.detail_kategori == detail_kategori)
     )
     
+    conditions = [DataMateri.kategori == kategori]
+    if detail_kategori:
+        conditions.append(DataMateri.detail_kategori == detail_kategori)
+    
+    return query.where(*conditions)
+
+@router.get("/{kategori}")
+@router.get("/{kategori}/{detail_kategori}")
+async def get_data_materi(
+    kategori: str,
+    detail_kategori: Optional[str] = None,
+    db=Depends(get_async_db)
+):
     try:
+        query = build_query(kategori, detail_kategori)
         result = await db.execute(query)
         data = result.all()
         
         if not data:
-            raise HTTPException(status_code=404, detail=f"No data found for kategori: {kategori} and detail_kategori: {detail_kategori}")
+            error_msg = f"No data found for kategori: {kategori}"
+            if detail_kategori:
+                error_msg += f" and detail_kategori: {detail_kategori}"
+            raise HTTPException(status_code=404, detail=error_msg)
         
-        return [{
-            "materi": item[0],
-            "detail_materi": item[1],
-            "detail_kategori": item[2],
-            "indikator": item[3],
-            "indikator_mulai": item[4],
-            "indikator_akhir": item[5]
-        } for item in data]
+        return format_materi_response(data)
         
     except HTTPException:
         raise
     except Exception as e:
-        import traceback
-        error_details = {
-            "error_type": type(e).__name__,
-            "error_message": str(e),
-            "traceback": traceback.format_exc()
-        }
-        print("Database Error Details:", error_details)  # For logging
-        raise HTTPException(
-            status_code=500,
-            detail=f"Database error: {error_details['error_type']} - {error_details['error_message']}"
-        )
+        await handle_db_error(e)
