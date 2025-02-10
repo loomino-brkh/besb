@@ -11,6 +11,8 @@ router = APIRouter()
 async def get_data_by_kategori_and_detail(
     kategori: str,
     detail_kategori: str,
+    sort_by: str = None,
+    sort_order: str = "asc",
     db=Depends(get_async_db)
 ):
     query = select(
@@ -24,7 +26,13 @@ async def get_data_by_kategori_and_detail(
         (DataMateri.kategori == kategori) & 
         (DataMateri.detail_kategori == detail_kategori)
     )
-    
+
+    if sort_by:
+        column = getattr(DataMateri, sort_by, None)
+        if column is None:
+            raise HTTPException(status_code=400, detail=f"Invalid sort column: {sort_by}")
+        query = query.order_by(column.desc() if sort_order.lower() == "desc" else column)
+
     try:
         result = await db.execute(query)
         data = result.all()
@@ -51,6 +59,59 @@ async def get_data_by_kategori_and_detail(
             "traceback": traceback.format_exc()
         }
         print("Database Error Details:", error_details)  # For logging
+        raise HTTPException(
+            status_code=500,
+            detail=f"Database error: {error_details['error_type']} - {error_details['error_message']}"
+        )
+
+@router.get("/{kategori}")
+async def get_data_by_kategori(
+    kategori: str,
+    sort_by: str = None,
+    sort_order: str = "asc",
+    db=Depends(get_async_db)
+):
+    query = select(
+        DataMateri.materi,
+        DataMateri.detail_materi,
+        DataMateri.detail_kategori,
+        DataMateri.indikator,
+        DataMateri.indikator_mulai,
+        DataMateri.indikator_akhir
+    ).where(DataMateri.kategori == kategori)
+    
+    if sort_by:
+        column = getattr(DataMateri, sort_by, None)
+        if column is None:
+            raise HTTPException(status_code=400, detail=f"Invalid sort column: {sort_by}")
+        query = query.order_by(column.desc() if sort_order.lower() == "desc" else column)
+
+    try:
+        result = await db.execute(query)
+        data = result.all()
+        
+        if not data:
+            raise HTTPException(status_code=404, detail=f"No data found for kategori: {kategori}")
+        
+        return [{
+            "materi": item[0],
+            "detail_materi": item[1],
+            "detail_kategori": item[2],
+            "indikator": item[3],
+            "indikator_mulai": item[4],
+            "indikator_akhir": item[5]
+        } for item in data]
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        error_details = {
+            "error_type": type(e).__name__,
+            "error_message": str(e),
+            "traceback": traceback.format_exc()
+        }
+        print("Database Error Details:", error_details)
         raise HTTPException(
             status_code=500,
             detail=f"Database error: {error_details['error_type']} - {error_details['error_message']}"
