@@ -7,9 +7,10 @@ from schema.data_materi_schema import DataMateri
 
 router = APIRouter()
 
-@router.get("/{kategori}")
-async def get_data_by_kategori(
+@router.get("/{kategori}/{detail_kategori}")
+async def get_data_by_kategori_and_detail(
     kategori: str,
+    detail_kategori: str,
     db=Depends(get_async_db)
 ):
     query = select(
@@ -19,14 +20,17 @@ async def get_data_by_kategori(
         DataMateri.indikator,
         DataMateri.indikator_mulai,
         DataMateri.indikator_akhir
-    ).where(DataMateri.kategori == kategori)
+    ).where(
+        (DataMateri.kategori == kategori) & 
+        (DataMateri.detail_kategori == detail_kategori)
+    )
     
     try:
         result = await db.execute(query)
         data = result.all()
         
         if not data:
-            raise HTTPException(status_code=404, detail=f"No data found for kategori: {kategori}")
+            raise HTTPException(status_code=404, detail=f"No data found for kategori: {kategori} and detail_kategori: {detail_kategori}")
         
         return [{
             "materi": item[0],
