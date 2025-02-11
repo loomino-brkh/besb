@@ -29,9 +29,7 @@ def login(request):
 @permission_classes([IsAuthenticated, LocalhostOnly])
 def verify_token(request):
     user_id = request.user.id
-    # Include the client IP in the cache key to tighten the scope
-    client_ip = request.META.get("REMOTE_ADDR", "unknown")
-    cache_key = f'token_valid_{user_id}_{client_ip}'
+    cache_key = f'token_valid_{user_id}'
 
     # Check if the result is cached
     cached_result = cache.get(cache_key)
