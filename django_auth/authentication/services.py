@@ -2,6 +2,9 @@ from rest_framework_simplejwt.tokens import AccessToken
 from django.core.cache import cache
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.exceptions import TokenError
+from .apikey_models import APIKey
+import hashlib
+from django.utils import timezone
 
 def verify_token_logic(token: str) -> dict:
     """
@@ -54,39 +57,51 @@ def verify_token_logic(token: str) -> dict:
 def verify_api_key_logic(api_key: str) -> dict:
     """
     Core logic for verifying an API key.
+    Uses the APIKey model's authenticate method and checks expiration/revocation.
     Returns a dictionary with validation results.
     """
-    from .models import APIKey  # Import here to avoid circular imports
-    
     try:
         # Check if result is cached
-        cache_key = f'api_key_valid_{api_key[:32]}'  # Use first 32 chars of key as cache key
+        cache_key = f'api_key_valid_{hashlib.sha256(api_key.encode()).hexdigest()}'
         cached_result = cache.get(cache_key)
         if cached_result is not None:
-            return {
-                'valid': True,
-                'cached': True,
-                'permission': cached_result['permission']
-            }
+            return cached_result
 
-        # Check if API key exists and is valid
-        api_key_obj = APIKey.objects.filter(key=api_key, is_active=True).first()
-        if not api_key_obj:
+        # Authenticate using the model's method
+        owner = APIKey.authenticate(api_key)
+        if not owner:
             return {
                 'valid': False,
-                'error': 'Invalid or inactive API key'
+                'error': 'Invalid or expired API key'
             }
 
-        # Cache the successful verification
+        # Get the API key object for additional checks
+        hashed = hashlib.sha256(api_key.encode()).hexdigest()
+        api_key_obj = APIKey.objects.get(hashed_key=hashed, revoked=False)
+
+        # Check expiration
+        if api_key_obj.expires_at and api_key_obj.expires_at < timezone.now():
+            return {
+                'valid': False,
+                'error': 'API key has expired'
+            }
+
+        # Cache and return successful result
         result = {
             'valid': True,
             'permission': api_key_obj.permission,
+            'owner_id': owner.id,
             'key_id': api_key_obj.id
         }
         cache.set(cache_key, result, timeout=300)  # Cache for 5 minutes
         
         return result
 
+    except APIKey.DoesNotExist:
+        return {
+            'valid': False,
+            'error': 'Invalid API key'
+        }
     except Exception as e:
         return {
             'valid': False,
