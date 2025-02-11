@@ -1,8 +1,8 @@
 from fastapi import HTTPException, Header, Depends
 from typing import Optional, Dict
 import os
+import httpx
 import hashlib
-from . import auth_service  # Import the local auth_service module
 
 async def verify_api_key(authorization: str = Header(None)) -> Dict:
     if not authorization:
@@ -13,15 +13,19 @@ async def verify_api_key(authorization: str = Header(None)) -> Dict:
 
     api_key = authorization.split(" ")[1]
     try:
-        # Call the local verify_api_key function
-        result = auth_service.verify_api_key(api_key)
-        if not result:
-            raise HTTPException(
-                status_code=401,
-                detail=f"Invalid API key"
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"http://localhost:8001/auth/apikeys/verify/",
+                json={"api_key": api_key},
+                headers={"Host": "localhost"}
             )
-        return result
-    except Exception as e:
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=401,
+                    detail=f"Invalid API key: {response.text}"
+                )
+            return response.json()
+    except httpx.RequestError as e:
         raise HTTPException(
             status_code=503,
             detail=f"Authentication service unavailable: {str(e)}"
@@ -40,19 +44,35 @@ async def verify_token(authorization: str = Header(None)) -> Dict:
     
     if auth_type == "bearer":
         try:
-            token = auth_parts[1]
-            # Pass only the bare token for verification.
-            result = auth_service.verify_token(token)
-            if not result:
-                raise HTTPException(status_code=401, detail="Invalid token")
-            result["permission"] = "read_write"
-            return result
-        except Exception as e:
-            raise HTTPException(status_code=503, detail=f"Authentication service unavailable: {str(e)}")
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"http://localhost:8001/auth/verify/",
+                    headers={
+                        "Authorization": authorization,
+                        "Host": "localhost"
+                    }
+                )
+                if response.status_code != 200:
+                    raise HTTPException(
+                        status_code=401,
+                        detail=f"Invalid token: {response.text}"
+                    )
+                # For Bearer tokens, we grant full permissions
+                result = response.json()
+                result["permission"] = "read_write"
+                return result
+        except httpx.RequestError as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Authentication service unavailable: {str(e)}"
+            )
     elif auth_type == "apikey":
         return await verify_api_key(authorization)
     else:
-        raise HTTPException(status_code=401, detail="Invalid authorization type. Use 'Bearer' or 'ApiKey'")
+        raise HTTPException(
+            status_code=401, 
+            detail="Invalid authorization type. Use 'Bearer' or 'ApiKey'"
+        )
 
 async def verify_read_permission(authorization: str = Header(None)) -> Dict:
     """Verifies if the token/key has read permission"""
