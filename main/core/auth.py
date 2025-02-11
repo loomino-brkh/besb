@@ -7,12 +7,19 @@ import sys
 django_auth_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'django_auth'))
 sys.path.append(django_auth_path)
 
+# Set required environment variables for Django
+os.environ.setdefault('DJANGO_SECRET_KEY', 'Pxf0AsnFeejnpZfp4Ya8F4wsyJcqSV2Q')
+os.environ.setdefault('POSTGRES_DB', 'besb_db')
+os.environ.setdefault('POSTGRES_USER', 'besb_user')
+os.environ.setdefault('POSTGRES_PASSWORD', 'NsJTxYB5VY7hTN3EAulY1Ice132qKhgH')
+os.environ.setdefault('POSTGRES_CONTAINER_NAME', 'besb_postgres')
+os.environ.setdefault('REDIS_CONTAINER_NAME', 'besb_redis')
+
 import django
-# Update the settings module path to match the actual structure
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'auth_project.settings')
 django.setup()
 
-# Import Django verification logic - update the import path
+# Import Django verification logic
 from asgiref.sync import sync_to_async
 from authentication.services import verify_api_key_logic, verify_token_logic
 
