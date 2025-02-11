@@ -1,25 +1,25 @@
-from fastapi import HTTPException, Header
-from typing import Optional, Dict
 import os
 import sys
+from typing import Optional, Dict
 
 # Add django_auth directory to Python path
 django_auth_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'django_auth'))
 sys.path.append(django_auth_path)
 
-# Set required environment variables for Django
-os.environ.setdefault('DJANGO_SECRET_KEY', 'Pxf0AsnFeejnpZfp4Ya8F4wsyJcqSV2Q')
-os.environ.setdefault('POSTGRES_DB', 'besb_db')
-os.environ.setdefault('POSTGRES_USER', 'besb_user')
-os.environ.setdefault('POSTGRES_PASSWORD', 'NsJTxYB5VY7hTN3EAulY1Ice132qKhgH')
-os.environ.setdefault('POSTGRES_CONTAINER_NAME', 'besb_postgres')
-os.environ.setdefault('REDIS_CONTAINER_NAME', 'besb_redis')
+# Set required environment variables for Django BEFORE importing django
+os.environ['DJANGO_SETTINGS_MODULE'] = 'auth_project.settings'
+os.environ['DJANGO_SECRET_KEY'] = 'Pxf0AsnFeejnpZfp4Ya8F4wsyJcqSV2Q'
+os.environ['POSTGRES_DB'] = 'besb_db'
+os.environ['POSTGRES_USER'] = 'besb_user'
+os.environ['POSTGRES_PASSWORD'] = 'NsJTxYB5VY7hTN3EAulY1Ice132qKhgH'
+os.environ['POSTGRES_CONTAINER_NAME'] = 'besb_postgres'
+os.environ['REDIS_CONTAINER_NAME'] = 'besb_redis'
 
+# Now import Django and other dependencies
 import django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'auth_project.settings')
 django.setup()
 
-# Import Django verification logic
+from fastapi import HTTPException, Header
 from asgiref.sync import sync_to_async
 from authentication.services import verify_api_key_logic, verify_token_logic
 
