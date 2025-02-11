@@ -1,8 +1,8 @@
 from fastapi import HTTPException, Header, Depends
 from typing import Optional, Dict
 import os
-import httpx
 import hashlib
+from . import auth_service  # Import the local auth_service module
 
 async def verify_api_key(authorization: str = Header(None)) -> Dict:
     if not authorization:
@@ -13,19 +13,15 @@ async def verify_api_key(authorization: str = Header(None)) -> Dict:
 
     api_key = authorization.split(" ")[1]
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"http://localhost:8001/auth/apikeys/verify/",
-                json={"api_key": api_key},
-                headers={"Host": "localhost"}
+        # Call the local verify_api_key function
+        result = auth_service.verify_api_key(api_key)
+        if not result:
+            raise HTTPException(
+                status_code=401,
+                detail=f"Invalid API key"
             )
-            if response.status_code != 200:
-                raise HTTPException(
-                    status_code=401,
-                    detail=f"Invalid API key: {response.text}"
-                )
-            return response.json()
-    except httpx.RequestError as e:
+        return result
+    except Exception as e:
         raise HTTPException(
             status_code=503,
             detail=f"Authentication service unavailable: {str(e)}"
@@ -44,24 +40,17 @@ async def verify_token(authorization: str = Header(None)) -> Dict:
     
     if auth_type == "bearer":
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    f"http://localhost:8001/auth/verify/",
-                    headers={
-                        "Authorization": authorization,
-                        "Host": "localhost"
-                    }
+            # Call the local verify_token function
+            result = auth_service.verify_token(authorization)
+            if not result:
+                raise HTTPException(
+                    status_code=401,
+                    detail=f"Invalid token"
                 )
-                if response.status_code != 200:
-                    raise HTTPException(
-                        status_code=401,
-                        detail=f"Invalid token: {response.text}"
-                    )
-                # For Bearer tokens, we grant full permissions
-                result = response.json()
-                result["permission"] = "read_write"
-                return result
-        except httpx.RequestError as e:
+            # For Bearer tokens, we grant full permissions
+            result["permission"] = "read_write"
+            return result
+        except Exception as e:
             raise HTTPException(
                 status_code=503,
                 detail=f"Authentication service unavailable: {str(e)}"
