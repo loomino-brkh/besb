@@ -2,12 +2,14 @@ import os
 import sys
 from typing import Optional, Dict
 
-# Add django_auth directory to Python path
-django_auth_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'django_auth'))
-sys.path.append(django_auth_path)
+# Add parent directory to Python path to find django_auth
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '..', '..'))
+django_auth_path = os.path.join(project_root, 'django_auth')
+sys.path.insert(0, project_root)
 
 # Set required environment variables for Django BEFORE importing django
-os.environ['DJANGO_SETTINGS_MODULE'] = 'auth_project.settings'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'django_auth.auth_project.settings'
 os.environ['DJANGO_SECRET_KEY'] = 'Pxf0AsnFeejnpZfp4Ya8F4wsyJcqSV2Q'
 os.environ['POSTGRES_DB'] = 'besb_db'
 os.environ['POSTGRES_USER'] = 'besb_user'
@@ -21,7 +23,7 @@ django.setup()
 
 from fastapi import HTTPException, Header
 from asgiref.sync import sync_to_async
-from authentication.services import verify_api_key_logic, verify_token_logic
+from django_auth.authentication.services import verify_api_key_logic, verify_token_logic
 
 async def verify_api_key(authorization: str = Header(None)) -> Dict:
     if not authorization:
