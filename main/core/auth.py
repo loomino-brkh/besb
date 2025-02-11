@@ -40,28 +40,19 @@ async def verify_token(authorization: str = Header(None)) -> Dict:
     
     if auth_type == "bearer":
         try:
-            # Call the local verify_token function
-            result = auth_service.verify_token(authorization)
+            token = auth_parts[1]
+            # Pass only the bare token for verification.
+            result = auth_service.verify_token(token)
             if not result:
-                raise HTTPException(
-                    status_code=401,
-                    detail=f"Invalid token"
-                )
-            # For Bearer tokens, we grant full permissions
+                raise HTTPException(status_code=401, detail="Invalid token")
             result["permission"] = "read_write"
             return result
         except Exception as e:
-            raise HTTPException(
-                status_code=503,
-                detail=f"Authentication service unavailable: {str(e)}"
-            )
+            raise HTTPException(status_code=503, detail=f"Authentication service unavailable: {str(e)}")
     elif auth_type == "apikey":
         return await verify_api_key(authorization)
     else:
-        raise HTTPException(
-            status_code=401, 
-            detail="Invalid authorization type. Use 'Bearer' or 'ApiKey'"
-        )
+        raise HTTPException(status_code=401, detail="Invalid authorization type. Use 'Bearer' or 'ApiKey'")
 
 async def verify_read_permission(authorization: str = Header(None)) -> Dict:
     """Verifies if the token/key has read permission"""
