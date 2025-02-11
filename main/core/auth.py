@@ -1,8 +1,15 @@
-from fastapi import HTTPException, Header, Depends
+from fastapi import HTTPException, Header
 from typing import Optional, Dict
 import os
-import httpx
-import hashlib
+import django
+
+# Configure Django settings
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'auth_project.settings')
+django.setup()
+
+# Import Django verification logic
+from asgiref.sync import sync_to_async
+from django_auth.authentication.services import verify_api_key_logic, verify_token_logic
 
 async def verify_api_key(authorization: str = Header(None)) -> Dict:
     if not authorization:
@@ -13,29 +20,23 @@ async def verify_api_key(authorization: str = Header(None)) -> Dict:
 
     api_key = authorization.split(" ")[1]
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                f"http://localhost:8001/auth/apikeys/verify/",
-                json={"api_key": api_key},
-                headers={"Host": "localhost"}
+        result = await sync_to_async(verify_api_key_logic)(api_key)
+        if not result.get('valid', False):
+            raise HTTPException(
+                status_code=401,
+                detail=f"Invalid API key: {result.get('error', 'Unknown error')}"
             )
-            if response.status_code != 200:
-                raise HTTPException(
-                    status_code=401,
-                    detail=f"Invalid API key: {response.text}"
-                )
-            return response.json()
-    except httpx.RequestError as e:
+        return result
+    except Exception as e:
         raise HTTPException(
             status_code=503,
-            detail=f"Authentication service unavailable: {str(e)}"
+            detail=f"Authentication service error: {str(e)}"
         )
 
 async def verify_token(authorization: str = Header(None)) -> Dict:
     if not authorization:
         raise HTTPException(status_code=401, detail="No authorization provided")
 
-    # Check if it's a Bearer token or API key
     auth_parts = authorization.split()
     if len(auth_parts) != 2:
         raise HTTPException(status_code=401, detail="Invalid authorization format")
@@ -43,28 +44,21 @@ async def verify_token(authorization: str = Header(None)) -> Dict:
     auth_type = auth_parts[0].lower()
     
     if auth_type == "bearer":
+        token = auth_parts[1]
         try:
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    f"http://localhost:8001/auth/verify/",
-                    headers={
-                        "Authorization": authorization,
-                        "Host": "localhost"
-                    }
+            result = await sync_to_async(verify_token_logic)(token)
+            if not result.get('valid', False):
+                raise HTTPException(
+                    status_code=401,
+                    detail=f"Invalid token: {result.get('error', 'Unknown error')}"
                 )
-                if response.status_code != 200:
-                    raise HTTPException(
-                        status_code=401,
-                        detail=f"Invalid token: {response.text}"
-                    )
-                # For Bearer tokens, we grant full permissions
-                result = response.json()
-                result["permission"] = "read_write"
-                return result
-        except httpx.RequestError as e:
+            # For Bearer tokens, we grant full permissions
+            result["permission"] = "read_write"
+            return result
+        except Exception as e:
             raise HTTPException(
                 status_code=503,
-                detail=f"Authentication service unavailable: {str(e)}"
+                detail=f"Authentication service error: {str(e)}"
             )
     elif auth_type == "apikey":
         return await verify_api_key(authorization)
