@@ -1,10 +1,14 @@
 from fastapi import HTTPException, Header
 from typing import Optional, Dict
 import os
-import django
+import sys
 
-# Configure Django settings
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'auth_project.settings')
+# Add django_auth directory to Python path
+django_auth_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'django_auth'))
+sys.path.append(django_auth_path)
+
+import django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_auth.auth_project.settings')
 django.setup()
 
 # Import Django verification logic
