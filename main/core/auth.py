@@ -8,12 +8,13 @@ django_auth_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 sys.path.append(django_auth_path)
 
 import django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_auth.auth_project.settings')
+# Update the settings module path to match the actual structure
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'auth_project.settings')
 django.setup()
 
-# Import Django verification logic
+# Import Django verification logic - update the import path
 from asgiref.sync import sync_to_async
-from django_auth.authentication.services import verify_api_key_logic, verify_token_logic
+from authentication.services import verify_api_key_logic, verify_token_logic
 
 async def verify_api_key(authorization: str = Header(None)) -> Dict:
     if not authorization:
