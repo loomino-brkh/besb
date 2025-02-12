@@ -1,1 +1,1 @@
-default_app_config = 'authentication.apps.AuthenticationConfig'
+default_app_config = 'django_auth.authentication.apps.AuthenticationConfig'
