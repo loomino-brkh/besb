@@ -52,23 +52,14 @@ django.setup()
 # Import authentication services
 logger.info("Attempting to import authentication services...")
 try:
-    services_path = os.path.join(django_auth_path, 'authentication', 'services.py')
-    if not os.path.exists(services_path):
-        raise ImportError(f"Services file not found at {services_path}")
-    
-    logger.info(f"Found services.py at {services_path}")
-    from authentication.services import verify_api_key_logic, verify_token_logic
+    from authentication import services  # type: ignore
+    verify_api_key_logic = services.verify_api_key_logic
+    verify_token_logic = services.verify_token_logic
     logger.info("Successfully imported authentication services")
 except ImportError as e:
     logger.error(f"Failed to import authentication services: {e}")
-    logger.error(f"Python path: {os.environ.get('PYTHONPATH')}")
     logger.error(f"sys.path: {sys.path}")
-    auth_dir = os.path.join(django_auth_path, 'authentication')
-    if os.path.exists(auth_dir):
-        logger.error(f"Contents of {auth_dir}:")
-        for item in os.listdir(auth_dir):
-            logger.error(f"  - {item}")
-    raise ImportError(f"Could not import authentication services. Check logs for details: {e}")
+    raise ImportError(f"Could not import authentication services: {e}")
 
 async def verify_api_key(authorization: str = Header(None)) -> Dict:
     if not authorization:
