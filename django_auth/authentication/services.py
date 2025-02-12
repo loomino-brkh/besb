@@ -75,7 +75,7 @@ def verify_api_key_logic(api_key: str) -> dict:
             return cached_result
 
         # Authenticate using the model's method
-        owner = cast(User, APIKey.authenticate(api_key))
+        owner: Any = APIKey.authenticate(api_key)  # type: ignore
         if not owner:
             return {
                 'valid': False,
@@ -84,7 +84,7 @@ def verify_api_key_logic(api_key: str) -> dict:
 
         # Get the API key object for additional checks
         hashed = hashlib.sha256(api_key.encode()).hexdigest()
-        api_key_obj = cast(APIKey, APIKey.objects.get(hashed_key=hashed, revoked=False))
+        api_key_obj: Any = APIKey.objects.get(hashed_key=hashed, revoked=False)  # type: ignore
 
         # Check expiration
         if api_key_obj.expires_at and api_key_obj.expires_at < timezone.now():
@@ -97,8 +97,8 @@ def verify_api_key_logic(api_key: str) -> dict:
         result = {
             'valid': True,
             'permission': api_key_obj.permission,
-            'owner_id': cast(int, owner.id),  # type: ignore
-            'key_id': cast(int, api_key_obj.id)  # type: ignore
+            'owner_id': int(owner.id),
+            'key_id': int(api_key_obj.id)
         }
         cache.set(cache_key, result, timeout=300)  # Cache for 5 minutes
         
