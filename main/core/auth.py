@@ -6,8 +6,20 @@ from fastapi import HTTPException, Header
 from asgiref.sync import sync_to_async
 import logging
 
-# Configure logging
+# Configure detailed logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+# Log initial configuration
+logger.info(f"Starting authentication module configuration")
+logger.info(f"Project root: {project_root}")
+logger.info(f"Django auth path: {django_auth_path}")
+logger.info(f"Python path: {os.environ.get('PYTHONPATH')}")
+logger.info(f"sys.path: {sys.path}")
 
 # Configure paths for container environment
 project_root = '/app'  # Container root directory
