@@ -92,7 +92,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'authentication.apikey_authentication.APIKeyAuthentication',
+        'django_auth.authentication.apikey_authentication.APIKeyAuthentication',
     ],
 }
 
