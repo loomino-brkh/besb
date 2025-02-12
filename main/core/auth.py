@@ -42,19 +42,52 @@ os.environ.setdefault('REDIS_CONTAINER_NAME', 'besb_redis')
 import django
 django.setup()
 
-# Import authentication services with robust error handling
+# Import authentication services with robust error handling and path verification
 def import_auth_services():
     try:
-        from django_auth.authentication.services import verify_api_key_logic, verify_token_logic
-        return verify_api_key_logic, verify_token_logic
+        # Check if the services module exists
+        import importlib.util
+        services_path = os.path.join(django_auth_path, 'authentication', 'services.py')
+        
+        if not os.path.exists(services_path):
+            raise ImportError(f"Services file not found at {services_path}")
+            
+        logger.info(f"Found services.py at {services_path}")
+        
+        # First try the direct import
+        try:
+            from authentication.services import verify_api_key_logic, verify_token_logic
+            logger.info("Successfully imported from 'authentication.services'")
+            return verify_api_key_logic, verify_token_logic
+        except ImportError as direct_import_error:
+            logger.warning(f"Direct import failed: {direct_import_error}")
+            
+            # Try the full path import
+            from django_auth.authentication.services import verify_api_key_logic, verify_token_logic
+            logger.info("Successfully imported from 'django_auth.authentication.services'")
+            return verify_api_key_logic, verify_token_logic
+            
     except ImportError as e:
         logger.error(f"Failed to import authentication services: {e}")
+        logger.error(f"Python path: {os.environ.get('PYTHONPATH')}")
         logger.error(f"sys.path: {sys.path}")
         logger.error(f"Project root: {project_root}")
         logger.error(f"Django auth path: {django_auth_path}")
-        raise ImportError(f"Could not import authentication services. Please check the logs for details: {e}")
+        
+        # Try to list the authentication directory contents
+        auth_dir = os.path.join(django_auth_path, 'authentication')
+        if os.path.exists(auth_dir):
+            logger.error(f"Contents of {auth_dir}:")
+            for item in os.listdir(auth_dir):
+                logger.error(f"  - {item}")
+        else:
+            logger.error(f"Authentication directory not found at {auth_dir}")
+            
+        raise ImportError(f"Could not import authentication services. See logs for details: {e}")
 
+logger.info("Attempting to import authentication services...")
 verify_api_key_logic, verify_token_logic = import_auth_services()
+logger.info("Successfully imported authentication services")
 
 async def verify_api_key(authorization: str = Header(None)) -> Dict:
     if not authorization:
