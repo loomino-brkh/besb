@@ -9,15 +9,16 @@ import logging
 # Configure logging
 logger = logging.getLogger(__name__)
 
-# Get absolute paths using pathlib for better cross-platform compatibility
-current_dir = Path(__file__).resolve().parent
-project_root = current_dir.parent.parent
-django_auth_path = project_root / 'django_auth'
+# Configure paths for container environment
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = '/app'  # Container root directory
+django_auth_path = os.path.join(project_root, 'django_auth')
 
-# Ensure django_auth is in sys.path
-if str(django_auth_path) not in sys.path:
-    sys.path.insert(0, str(django_auth_path))
-    sys.path.insert(0, str(project_root))
+# Update Python path for container environment
+if django_auth_path not in sys.path:
+    sys.path.insert(0, django_auth_path)
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 # Set Django environment variables
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'auth_project.settings')
