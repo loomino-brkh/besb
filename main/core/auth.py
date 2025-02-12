@@ -122,3 +122,8 @@ async def verify_write_permission(authorization: str = Header(None)) -> Dict:
     permission = auth_data.get("permission", "")
     
     if permission not in ["write_only", "read_write"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Insufficient permissions. Write access required."
+        )
+    return auth_data
