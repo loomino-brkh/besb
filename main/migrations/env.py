@@ -75,7 +75,6 @@ def run_migrations_online() -> None:
             compare_server_default=True,  # Detect default value changes
             render_as_batch=True,  # Better handling of ALTER TABLE operations
             include_schemas=True,  # Include schema-level operations
-            include_name=True,  # Consider column/table name changes
         )
 
         with context.begin_transaction():
