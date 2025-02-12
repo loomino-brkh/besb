@@ -34,11 +34,14 @@ def verify_token_logic(raw_token: str) -> Dict[str, Any]:
         # Verify user exists
         User = get_user_model()
         user = User.objects.filter(id=user_id).first()
+        if user is not None:
+            user = cast('User', user)
         if not user:
             return {
                 'valid': False,
                 'error': 'User not found'
             }
+        user_id = cast(int, user.id)  # type: ignore
 
         # Cache the successful verification
         cache.set(cache_key, True, timeout=300)  # Cache for 5 minutes
