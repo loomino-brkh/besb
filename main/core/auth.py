@@ -23,14 +23,15 @@ logger.info("Starting authentication module configuration")
 logger.info(f"Project root: {project_root}")
 logger.info(f"Django auth path: {django_auth_path}")
 
-# Configure Django settings
-os.environ['DJANGO_SETTINGS_MODULE'] = 'auth_project.settings'
-os.environ['PYTHONPATH'] = f"{project_root}:{django_auth_path}"
-
 # Update Python path for container environment
 sys.path = [project_root, django_auth_path] + sys.path
 
-# Set Django environment variables
+# Configure Django settings and environment variables
+os.environ['PYTHONPATH'] = f"{project_root}:{django_auth_path}"
+os.environ['DJANGO_APPS_DIR'] = django_auth_path
+os.environ['DJANGO_SETTINGS_MODULE'] = 'auth_project.settings'
+
+# Set other environment variables
 os.environ.setdefault('DJANGO_SECRET_KEY', 'Pxf0AsnFeejnpZfp4Ya8F4wsyJcqSV2Q')
 os.environ.setdefault('POSTGRES_DB', 'besb_db')
 os.environ.setdefault('POSTGRES_USER', 'besb_user')
