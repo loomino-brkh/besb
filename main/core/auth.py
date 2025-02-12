@@ -10,18 +10,17 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Configure paths for container environment
-current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = '/app'  # Container root directory
 django_auth_path = os.path.join(project_root, 'django_auth')
 
+# Configure Django settings
+os.environ['DJANGO_SETTINGS_MODULE'] = 'auth_project.settings'
+os.environ['PYTHONPATH'] = f"{project_root}:{django_auth_path}"
+
 # Update Python path for container environment
-if django_auth_path not in sys.path:
-    sys.path.insert(0, django_auth_path)
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+sys.path = [project_root, django_auth_path] + sys.path
 
 # Set Django environment variables
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'auth_project.settings')
 os.environ.setdefault('DJANGO_SECRET_KEY', 'Pxf0AsnFeejnpZfp4Ya8F4wsyJcqSV2Q')
 os.environ.setdefault('POSTGRES_DB', 'besb_db')
 os.environ.setdefault('POSTGRES_USER', 'besb_user')
