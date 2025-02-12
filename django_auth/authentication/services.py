@@ -2,7 +2,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 from django.core.cache import cache
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.exceptions import TokenError
-from django_auth.authentication.apikey_models import APIKey
+from .apikey_models import APIKey
 import hashlib
 from django.utils import timezone
 
