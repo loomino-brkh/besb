@@ -14,21 +14,20 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+# Configure environment variables first
+os.environ['DJANGO_SECRET_KEY'] = 'Pxf0AsnFeejnpZfp4Ya8F4wsyJcqSV2Q'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'auth_project.settings'
+os.environ['DJANGO_ALLOW_ASYNC_UNSAFE'] = 'true'
+
 # Configure Django environment
 project_root = '/app'  # Container root directory
 django_auth_path = os.path.join(project_root, 'django_auth')
 
-# Add Django app to Python path
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
-if django_auth_path not in sys.path:
-    sys.path.insert(0, django_auth_path)
+# Configure sys.path for module resolution
+sys.path.insert(0, django_auth_path)
+sys.path.insert(0, os.path.dirname(django_auth_path))
 
-# Configure Django settings
-os.environ['DJANGO_SETTINGS_MODULE'] = 'auth_project.settings'
-
-# Configure environment variables
-os.environ.setdefault('DJANGO_SECRET_KEY', 'Pxf0AsnFeejnpZfp4Ya8F4wsyJcqSV2Q')
+# Configure remaining environment variables
 os.environ.setdefault('POSTGRES_DB', 'besb_db')
 os.environ.setdefault('POSTGRES_USER', 'besb_user')
 os.environ.setdefault('POSTGRES_PASSWORD', 'NsJTxYB5VY7hTN3EAulY1Ice132qKhgH')
