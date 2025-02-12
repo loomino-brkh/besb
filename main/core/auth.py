@@ -23,9 +23,20 @@ os.environ['DJANGO_ALLOW_ASYNC_UNSAFE'] = 'true'
 project_root = '/app'  # Container root directory
 django_auth_path = os.path.join(project_root, 'django_auth')
 
-# Configure sys.path for module resolution
-sys.path.insert(0, django_auth_path)
-sys.path.insert(0, os.path.dirname(django_auth_path))
+# Configure Python paths for import resolution
+local_auth_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'django_auth')
+container_auth_path = django_auth_path
+
+# Add both local and container paths for IDE and runtime resolution
+for path in [local_auth_path, container_auth_path]:
+    if path not in sys.path:
+        sys.path.insert(0, path)
+        sys.path.insert(0, os.path.dirname(path))
+
+logger.info(f"Python paths configured:")
+logger.info(f"Local auth path: {local_auth_path}")
+logger.info(f"Container auth path: {container_auth_path}")
+logger.info(f"sys.path: {sys.path}")
 
 # Configure remaining environment variables
 os.environ.setdefault('POSTGRES_DB', 'besb_db')
