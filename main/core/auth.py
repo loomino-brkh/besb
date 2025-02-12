@@ -6,11 +6,7 @@ from fastapi import HTTPException, Header
 from asgiref.sync import sync_to_async
 import logging
 
-# Configure paths for container environment
-project_root = '/app'  # Container root directory
-django_auth_path = os.path.join(project_root, 'django_auth')
-
-# Configure detailed logging
+# Configure logging
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -18,20 +14,20 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-# Log initial configuration
-logger.info("Starting authentication module configuration")
-logger.info(f"Project root: {project_root}")
-logger.info(f"Django auth path: {django_auth_path}")
+# Configure Django environment
+project_root = '/app'  # Container root directory
+django_auth_path = os.path.join(project_root, 'django_auth')
 
-# Update Python path for container environment
-sys.path = [project_root, django_auth_path] + sys.path
+# Add Django app to Python path
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+if django_auth_path not in sys.path:
+    sys.path.insert(0, django_auth_path)
 
-# Configure Django settings and environment variables
-os.environ['PYTHONPATH'] = f"{project_root}:{django_auth_path}"
-os.environ['DJANGO_APPS_DIR'] = django_auth_path
+# Configure Django settings
 os.environ['DJANGO_SETTINGS_MODULE'] = 'auth_project.settings'
 
-# Set other environment variables
+# Configure environment variables
 os.environ.setdefault('DJANGO_SECRET_KEY', 'Pxf0AsnFeejnpZfp4Ya8F4wsyJcqSV2Q')
 os.environ.setdefault('POSTGRES_DB', 'besb_db')
 os.environ.setdefault('POSTGRES_USER', 'besb_user')
