@@ -47,7 +47,7 @@ try:
         raise ImportError(f"Services file not found at {services_path}")
     
     logger.info(f"Found services.py at {services_path}")
-    from django_auth.authentication.services import verify_api_key_logic, verify_token_logic
+    from authentication.services import verify_api_key_logic, verify_token_logic
     logger.info("Successfully imported authentication services")
 except ImportError as e:
     logger.error(f"Failed to import authentication services: {e}")
