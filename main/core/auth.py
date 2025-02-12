@@ -40,7 +40,6 @@ def import_auth_services():
     except ImportError as e:
         logger.error(f"Failed to import authentication services: {e}")
         logger.error(f"sys.path: {sys.path}")
-        logger.error(f"Current directory: {current_dir}")
         logger.error(f"Project root: {project_root}")
         logger.error(f"Django auth path: {django_auth_path}")
         raise ImportError(f"Could not import authentication services. Please check the logs for details: {e}")
