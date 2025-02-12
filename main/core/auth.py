@@ -1,37 +1,51 @@
 import os
 import sys
-from typing import Optional, Dict
+from typing import Dict
+from pathlib import Path
+from fastapi import HTTPException, Header
+from asgiref.sync import sync_to_async
+import logging
 
-# Add django_auth parent directory to Python path
-current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.abspath(os.path.join(current_dir, '..', '..'))
-django_auth_path = os.path.join(project_root, 'django_auth')
+# Configure logging
+logger = logging.getLogger(__name__)
 
-# Add both paths to make sure Python can find the modules
-sys.path.insert(0, django_auth_path)  # For direct 'authentication' imports
-sys.path.insert(0, project_root)      # For 'django_auth.authentication' imports
+# Get absolute paths using pathlib for better cross-platform compatibility
+current_dir = Path(__file__).resolve().parent
+project_root = current_dir.parent.parent
+django_auth_path = project_root / 'django_auth'
 
-# Set required environment variables for Django BEFORE importing django
-os.environ['DJANGO_SETTINGS_MODULE'] = 'auth_project.settings'
-os.environ['DJANGO_SECRET_KEY'] = 'Pxf0AsnFeejnpZfp4Ya8F4wsyJcqSV2Q'
-os.environ['POSTGRES_DB'] = 'besb_db'
-os.environ['POSTGRES_USER'] = 'besb_user'
-os.environ['POSTGRES_PASSWORD'] = 'NsJTxYB5VY7hTN3EAulY1Ice132qKhgH'
-os.environ['POSTGRES_CONTAINER_NAME'] = 'besb_postgres'
-os.environ['REDIS_CONTAINER_NAME'] = 'besb_redis'
+# Ensure django_auth is in sys.path
+if str(django_auth_path) not in sys.path:
+    sys.path.insert(0, str(django_auth_path))
+    sys.path.insert(0, str(project_root))
 
-# Now import Django and other dependencies
+# Set Django environment variables
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'auth_project.settings')
+os.environ.setdefault('DJANGO_SECRET_KEY', 'Pxf0AsnFeejnpZfp4Ya8F4wsyJcqSV2Q')
+os.environ.setdefault('POSTGRES_DB', 'besb_db')
+os.environ.setdefault('POSTGRES_USER', 'besb_user')
+os.environ.setdefault('POSTGRES_PASSWORD', 'NsJTxYB5VY7hTN3EAulY1Ice132qKhgH')
+os.environ.setdefault('POSTGRES_CONTAINER_NAME', 'besb_postgres')
+os.environ.setdefault('REDIS_CONTAINER_NAME', 'besb_redis')
+
+# Initialize Django
 import django
 django.setup()
 
-from fastapi import HTTPException, Header
-from asgiref.sync import sync_to_async
+# Import authentication services with robust error handling
+def import_auth_services():
+    try:
+        from django_auth.authentication.services import verify_api_key_logic, verify_token_logic
+        return verify_api_key_logic, verify_token_logic
+    except ImportError as e:
+        logger.error(f"Failed to import authentication services: {e}")
+        logger.error(f"sys.path: {sys.path}")
+        logger.error(f"Current directory: {current_dir}")
+        logger.error(f"Project root: {project_root}")
+        logger.error(f"Django auth path: {django_auth_path}")
+        raise ImportError(f"Could not import authentication services. Please check the logs for details: {e}")
 
-# Try both import paths
-try:
-    from authentication.services import verify_api_key_logic, verify_token_logic
-except ImportError:
-    from django_auth.authentication.services import verify_api_key_logic, verify_token_logic
+verify_api_key_logic, verify_token_logic = import_auth_services()
 
 async def verify_api_key(authorization: str = Header(None)) -> Dict:
     if not authorization:
@@ -108,8 +122,3 @@ async def verify_write_permission(authorization: str = Header(None)) -> Dict:
     permission = auth_data.get("permission", "")
     
     if permission not in ["write_only", "read_write"]:
-        raise HTTPException(
-            status_code=403,
-            detail="Insufficient permissions. Write access required."
-        )
-    return auth_data
