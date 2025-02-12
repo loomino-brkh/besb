@@ -1,50 +1,37 @@
 import os
 import sys
 from typing import Optional, Dict
-from pathlib import Path
-from fastapi import HTTPException, Header
-from asgiref.sync import sync_to_async
 
-# Get absolute paths
-current_dir = Path(__file__).resolve().parent
-project_root = current_dir.parent.parent
-django_auth_path = project_root / 'django_auth'
+# Add django_auth parent directory to Python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, '..', '..'))
+django_auth_path = os.path.join(project_root, 'django_auth')
 
-# Configure Django settings and path
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'auth_project.settings')
+# Add both paths to make sure Python can find the modules
+sys.path.insert(0, django_auth_path)  # For direct 'authentication' imports
+sys.path.insert(0, project_root)      # For 'django_auth.authentication' imports
 
-# Add Django app to Python path if not already there
-django_auth_str = str(django_auth_path)
-if django_auth_str not in sys.path:
-    sys.path.insert(0, django_auth_str)
+# Set required environment variables for Django BEFORE importing django
+os.environ['DJANGO_SETTINGS_MODULE'] = 'auth_project.settings'
+os.environ['DJANGO_SECRET_KEY'] = 'Pxf0AsnFeejnpZfp4Ya8F4wsyJcqSV2Q'
+os.environ['POSTGRES_DB'] = 'besb_db'
+os.environ['POSTGRES_USER'] = 'besb_user'
+os.environ['POSTGRES_PASSWORD'] = 'NsJTxYB5VY7hTN3EAulY1Ice132qKhgH'
+os.environ['POSTGRES_CONTAINER_NAME'] = 'besb_postgres'
+os.environ['REDIS_CONTAINER_NAME'] = 'besb_redis'
 
-# Set other required environment variables if not already set
-env_vars = {
-    'DJANGO_SECRET_KEY': 'Pxf0AsnFeejnpZfp4Ya8F4wsyJcqSV2Q',
-    'POSTGRES_DB': 'besb_db',
-    'POSTGRES_USER': 'besb_user',
-    'POSTGRES_PASSWORD': 'NsJTxYB5VY7hTN3EAulY1Ice132qKhgH',
-    'POSTGRES_CONTAINER_NAME': 'besb_postgres',
-    'REDIS_CONTAINER_NAME': 'besb_redis'
-}
-
-for key, value in env_vars.items():
-    os.environ.setdefault(key, value)
-
-# Initialize Django
+# Now import Django and other dependencies
 import django
 django.setup()
 
-# Import authentication services with better error handling
+from fastapi import HTTPException, Header
+from asgiref.sync import sync_to_async
+
+# Try both import paths
 try:
+    from authentication.services import verify_api_key_logic, verify_token_logic
+except ImportError:
     from django_auth.authentication.services import verify_api_key_logic, verify_token_logic
-except ImportError as e:
-    # Provide more detailed error information
-    import traceback
-    error_msg = f"Failed to import authentication services: {str(e)}\n"
-    error_msg += f"Python path: {sys.path}\n"
-    error_msg += f"Traceback: {''.join(traceback.format_tb(e.__traceback__))}"
-    raise ImportError(error_msg)
 
 async def verify_api_key(authorization: str = Header(None)) -> Dict:
     if not authorization:
