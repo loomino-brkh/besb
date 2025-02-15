@@ -12,17 +12,17 @@ async def get_sesi_by_acara(
     acara: str,
     db=Depends(get_async_db)
 ):
-    query = select(Sesi.sesi).where(Sesi.acara == acara)
+    query = select(Sesi).where(Sesi.acara == acara)
     
     try:
         result = await db.execute(query)
-        data = result.all()
+        data = result.scalars().all()
         
         if not data:
             raise HTTPException(status_code=404, detail=f"No sesi found for acara: {acara}")
         
-        # Convert result into list of sesi
-        return [{"sesi": item[0]} for item in data]
+        # Convert result into list of sesi with waktu
+        return [{"sesi": item.sesi, "waktu": item.waktu.strftime("%H:%M") if item.waktu else None} for item in data]
         
     except HTTPException:
         raise
