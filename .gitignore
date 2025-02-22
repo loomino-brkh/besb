@@ -67,3 +67,5 @@ Thumbs.db
 versions/
 .aider*
 .vscode/
+memory-bank/
+.clinerules
