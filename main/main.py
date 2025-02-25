@@ -14,6 +14,7 @@ from core.db import engine
 from endpoints import (
     absen_asramaan,
     absen_pengajian,
+    biodata_generus,
     data_daerah,
     data_materi,
     sesi,
@@ -56,6 +57,7 @@ app.add_middleware(
 
 app.include_router(absen_pengajian.router, prefix="/absen-pengajian", tags=["absen-pengajian"])
 app.include_router(absen_asramaan.router, prefix="/absen-asramaan", tags=["absen-asramaan"])
+app.include_router(biodata_generus.router, prefix="/biodata/generus", tags=["biodata-generus"])
 app.include_router(data_daerah.router, prefix="/data/daerah", tags=["data-daerah"])
 app.include_router(sesi.router, prefix="/data/sesi", tags=["sesi"])
 app.include_router(url.router, prefix="/url", tags=["url"])
