@@ -5,11 +5,11 @@ from datetime import date
 
 from core.db import get_db
 from core.auth import verify_write_permission
-from schema.biodata_generus_schema import BiodataGenerusModel, BiodataGenerusResponse
+from schema.biodata_generus_schema import BiodataGenerusModel, BiodataGenerusResponse, BiodataGenerusGetResponse
 
 router = APIRouter()
 
-@router.get("/", response_model=list[BiodataGenerusResponse])
+@router.get("/", response_model=list[BiodataGenerusGetResponse])
 async def get_biodata():
     """
     Get all biodata entries for generus
@@ -18,7 +18,7 @@ async def get_biodata():
         with get_db() as db:
             # updated deprecated query syntax
             biodata = db.exec(select(BiodataGenerusModel)).all()
-            result = [BiodataGenerusResponse(
+            result = [BiodataGenerusGetResponse(
                 nama_lengkap=data.nama_lengkap,
                 nama_panggilan=data.nama_panggilan,
                 sambung_desa=data.sambung_desa,
