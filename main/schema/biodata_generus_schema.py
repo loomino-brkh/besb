@@ -28,6 +28,8 @@ class BiodataGenerusModel(BiodataGenerusBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     created_at: str = Field(default_factory=lambda: date.today().isoformat())
 
-class BiodataGenerusResponse(BiodataGenerusBase):
-    id: int
-    created_at: str
+class BiodataGenerusResponse(SQLModel):
+    nama_lengkap: str
+    nama_panggilan: str
+    sambung_desa: str
+    sambung_kelompok: str
