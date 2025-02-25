@@ -5,9 +5,9 @@ class DataMateri(SQLModel, table=True):
     
     id: int = Field(default=None, primary_key=True)
     kategori: str = Field(index=True)
-    detail_kategori: str
-    materi: str
-    detail_materi: str
-    indikator: str
-    indikator_mulai: str
-    indikator_akhir: str
+    detail_kategori: str = Field(default="")
+    materi: str = Field(default="")
+    detail_materi: str = Field(default="")
+    indikator: str = Field(default="")
+    indikator_mulai: str = Field(default="")
+    indikator_akhir: str = Field(default="")
