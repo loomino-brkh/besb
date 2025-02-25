@@ -6,5 +6,5 @@ class Sesi(SQLModel, table=True):
     
     id: int = Field(default=None, primary_key=True)
     acara: str = Field(index=True)
-    sesi: str
+    sesi: str = Field(index=True)
     waktu: time = Field(default=None)
