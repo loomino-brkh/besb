@@ -61,11 +61,9 @@ app.include_router(sesi.router, prefix="/data/sesi", tags=["sesi"])
 app.include_router(url.router, prefix="/url", tags=["url"])
 app.include_router(data_materi.router, prefix="/data/materi", tags=["data-materi"])
 
-
 @app.get("/")
 async def root():
     return {"message": "ERRORR!!! This is API. Not web page!!"}
-
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
