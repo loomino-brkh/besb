@@ -18,7 +18,12 @@ async def get_biodata():
         with get_db() as db:
             # updated deprecated query syntax
             biodata = db.exec(select(BiodataGenerusModel)).all()
-            result = [BiodataGenerusResponse.model_validate(data) for data in biodata]
+            result = [BiodataGenerusResponse(
+                nama_lengkap=data.nama_lengkap,
+                nama_panggilan=data.nama_panggilan,
+                sambung_desa=data.sambung_desa,
+                sambung_kelompok=data.sambung_kelompok
+            ) for data in biodata]
             return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving biodata: {str(e)}")
