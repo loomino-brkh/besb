@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Form
-from sqlmodel import Session, select
+from sqlmodel import Session, select, and_
 from fastapi.concurrency import run_in_threadpool
-from typing import List
+from typing import List, Optional
 from datetime import datetime, date, timedelta
 from schema.absen_asramaan_schema import AbsenAsramaan, AbsenAsramaanCreate, AbsenAsramaanRead
 from core.db import get_db
@@ -98,10 +98,10 @@ async def create_absen(
 
 @router.get("/", response_model=List[AbsenAsramaanRead], dependencies=[Depends(verify_read_permission)])
 async def list_absen(
-    tanggal: str = None,
-    acara: str = None,
-    sesi: str = None,
-    lokasi: str = None
+    tanggal: Optional[str] = None,
+    acara: Optional[str] = None,
+    sesi: Optional[str] = None,
+    lokasi: Optional[str] = None
 ):
     try:
         with get_db() as db:
@@ -113,8 +113,10 @@ async def list_absen(
                     # Convert string date to datetime for comparison
                     filter_date = datetime.strptime(tanggal, '%Y-%m-%d')
                     # Compare only the date part
-                    query = query.filter(AbsenAsramaan.tanggal >= filter_date,
-                                      AbsenAsramaan.tanggal < filter_date + timedelta(days=1))
+                    query = query.filter(and_(
+                        AbsenAsramaan.tanggal >= filter_date,
+                        AbsenAsramaan.tanggal < filter_date + timedelta(days=1)
+                    ))
                 except ValueError:
                     raise HTTPException(
                         status_code=422,
@@ -122,13 +124,13 @@ async def list_absen(
                     )
             
             if acara:
-                query = query.filter(AbsenAsramaan.acara == acara)
+                query = query.filter(and_(AbsenAsramaan.acara == acara))
                 
             if sesi:
-                query = query.filter(AbsenAsramaan.sesi == sesi)
+                query = query.filter(and_(AbsenAsramaan.sesi == sesi))
                 
             if lokasi:
-                query = query.filter(AbsenAsramaan.lokasi == lokasi)
+                query = query.filter(and_(AbsenAsramaan.lokasi == lokasi))
             
             absen_list = db.exec(query).all()
             # Convert to response model to ensure we have all data before session closes
