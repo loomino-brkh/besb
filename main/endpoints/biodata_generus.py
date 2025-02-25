@@ -1,15 +1,17 @@
-from fastapi import APIRouter, Depends, Form, HTTPException
+from fastapi import APIRouter, Depends, Form, HTTPException, Header
 from sqlmodel import Session
-from typing import Optional
+from typing import Optional, Dict
 from datetime import date
 
 from core.db import get_db_dependency
+from core.auth import verify_write_permission
 from schema.biodata_generus_schema import BiodataGenerusModel, BiodataGenerusResponse
 
 router = APIRouter()
 
 @router.post("/", response_model=BiodataGenerusResponse)
 async def create_biodata(
+    authorization: str = Header(...),
     nama_lengkap: str = Form(...),
     nama_panggilan: str = Form(...),
     kelahiran_tempat: str = Form(...),
@@ -25,7 +27,8 @@ async def create_biodata(
     nama_ibu: str = Form(...),
     status_ayah: str = Form(...),
     status_ibu: str = Form(...),
-    db: Session = Depends(get_db_dependency)
+    db: Session = Depends(get_db_dependency),
+    auth_data: Dict = Depends(verify_write_permission)
 ):
     """
     Create a new biodata entry for generus
