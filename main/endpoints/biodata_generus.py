@@ -9,6 +9,19 @@ from schema.biodata_generus_schema import BiodataGenerusModel, BiodataGenerusRes
 
 router = APIRouter()
 
+@router.get("/", response_model=list[BiodataGenerusResponse])
+async def get_biodata():
+    """
+    Get all biodata entries for generus
+    """
+    try:
+        with get_db() as db:
+            biodata = db.query(BiodataGenerusModel).all()
+            result = [BiodataGenerusResponse.model_validate(data) for data in biodata]
+            return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving biodata: {str(e)}")
+
 @router.post("/", response_model=BiodataGenerusResponse, dependencies=[Depends(verify_write_permission)])
 async def create_biodata(
     nama_lengkap: str = Form(...),
