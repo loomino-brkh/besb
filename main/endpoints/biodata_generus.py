@@ -4,7 +4,7 @@ from typing import Optional, Dict
 from datetime import date
 
 from core.db import get_db_dependency
-from core.auth import verify_api_key
+from core.auth import verify_write_permission
 from schema.biodata_generus_schema import BiodataGenerusModel, BiodataGenerusResponse
 
 router = APIRouter()
@@ -28,7 +28,7 @@ async def create_biodata(
     status_ayah: str = Form(...),
     status_ibu: str = Form(...),
     db: Session = Depends(get_db_dependency),
-    auth_data: Dict = Depends(verify_api_key)
+    auth_data: Dict = Depends(verify_write_permission)
 ):
     """
     Create a new biodata entry for generus
