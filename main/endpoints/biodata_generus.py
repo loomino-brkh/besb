@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Form, HTTPException
-from sqlmodel import Session
+from sqlmodel import Session, select  # updated import to include "select"
 from typing import Optional
 from datetime import date
 
@@ -16,7 +16,8 @@ async def get_biodata():
     """
     try:
         with get_db() as db:
-            biodata = db.query(BiodataGenerusModel).all()
+            # updated deprecated query syntax
+            biodata = db.exec(select(BiodataGenerusModel)).all()
             result = [BiodataGenerusResponse.model_validate(data) for data in biodata]
             return result
     except Exception as e:
