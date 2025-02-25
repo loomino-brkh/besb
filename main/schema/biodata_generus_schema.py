@@ -18,6 +18,12 @@ class BiodataGenerusBase(SQLModel):
     nama_ibu: str
     status_ayah: str
     status_ibu: str
+    sambung_desa_ayah: str
+    sambung_desa_ibu: str
+    sambung_kelompok_ayah: str
+    sambung_kelompok_ibu: str
+    nomor_hape_ayah: Optional[str] = None
+    nomor_hape_ibu: Optional[str] = None
 
 class BiodataGenerusCreate(BiodataGenerusBase):
     pass
