@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 from sqlmodel import SQLModel, Field
-from pydantic import validator
+from pydantic import field_validator
 
 class AbsenPengajianBase(SQLModel):
     acara: str = Field(index=True)
@@ -12,7 +12,7 @@ class AbsenPengajianBase(SQLModel):
     ranah: str
     detail_ranah: str
 
-    @validator('jam_hadir')
+    @field_validator('jam_hadir')
     def validate_jam_hadir(cls, v):
         try:
             # Parse time string and reformat to ensure HH:mm format
