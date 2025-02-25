@@ -74,7 +74,12 @@ async def create_biodata(
             db.add(biodata)
             db.commit()
             db.refresh(biodata)
-            result = BiodataGenerusResponse.model_validate(biodata)
+            result = BiodataGenerusResponse(
+                nama_lengkap=biodata.nama_lengkap,
+                nama_panggilan=biodata.nama_panggilan,
+                sambung_desa=biodata.sambung_desa,
+                sambung_kelompok=biodata.sambung_kelompok
+            )
         
         return result
     except Exception as e:
