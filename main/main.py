@@ -39,7 +39,6 @@ async def lifespan(app: FastAPI):
         raise
     yield
 
-
 app = FastAPI(
     docs_url=None,
     redoc_url=None,
