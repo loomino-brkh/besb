@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Form
-from sqlmodel import Session, select
+from sqlmodel import Session, select, and_
 from fastapi.concurrency import run_in_threadpool
-from typing import List
+from typing import List, Optional
 from datetime import datetime, date, timedelta
 from schema.absen_pengajian_schema import AbsenPengajian, AbsenPengajianCreate, AbsenPengajianRead
 from core.db import get_db
@@ -94,9 +94,9 @@ async def create_absen(
 
 @router.get("/", response_model=List[AbsenPengajianRead], dependencies=[Depends(verify_read_permission)])
 async def list_absen(
-    tanggal: str = None,
-    acara: str = None,
-    lokasi: str = None
+    tanggal: Optional[str] = None,
+    acara: Optional[str] = None,
+    lokasi: Optional[str] = None
 ):
     try:
         with get_db() as db:
@@ -108,8 +108,10 @@ async def list_absen(
                     # Convert string date to datetime for comparison
                     filter_date = datetime.strptime(tanggal, '%Y-%m-%d')
                     # Compare only the date part
-                    query = query.filter(AbsenPengajian.tanggal >= filter_date,
-                                      AbsenPengajian.tanggal < filter_date + timedelta(days=1))
+                    query = query.filter(and_(
+                        AbsenPengajian.tanggal >= filter_date,
+                        AbsenPengajian.tanggal < filter_date + timedelta(days=1)
+                    ))
                 except ValueError:
                     raise HTTPException(
                         status_code=422,
@@ -117,10 +119,10 @@ async def list_absen(
                     )
             
             if acara:
-                query = query.filter(AbsenPengajian.acara == acara)
+                query = query.filter(and_(AbsenPengajian.acara == acara))
             
             if lokasi:
-                query = query.filter(AbsenPengajian.lokasi == lokasi)
+                query = query.filter(and_(AbsenPengajian.lokasi == lokasi))
             
             absen_list = db.exec(query).all()
             # Convert to response model to ensure we have all data before session closes
