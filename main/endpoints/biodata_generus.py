@@ -1,17 +1,16 @@
-from fastapi import APIRouter, Depends, Form, HTTPException, Header
+from fastapi import APIRouter, Depends, Form, HTTPException
 from sqlmodel import Session
-from typing import Optional, Dict
+from typing import Optional
 from datetime import date
 
-from core.db import get_db_dependency
+from core.db import get_db
 from core.auth import verify_write_permission
 from schema.biodata_generus_schema import BiodataGenerusModel, BiodataGenerusResponse
 
 router = APIRouter()
 
-@router.post("/", response_model=BiodataGenerusResponse)
+@router.post("/", response_model=BiodataGenerusResponse, dependencies=[Depends(verify_write_permission)])
 async def create_biodata(
-    authorization: str = Header(...),
     nama_lengkap: str = Form(...),
     nama_panggilan: str = Form(...),
     kelahiran_tempat: str = Form(...),
@@ -26,39 +25,38 @@ async def create_biodata(
     nama_ayah: str = Form(...),
     nama_ibu: str = Form(...),
     status_ayah: str = Form(...),
-    status_ibu: str = Form(...),
-    db: Session = Depends(get_db_dependency),
-    auth_data: Dict = Depends(verify_write_permission)
+    status_ibu: str = Form(...)
 ):
     """
     Create a new biodata entry for generus
     """
     try:
-        # Create biodata model
-        biodata = BiodataGenerusModel(
-            nama_lengkap=nama_lengkap,
-            nama_panggilan=nama_panggilan,
-            kelahiran_tempat=kelahiran_tempat,
-            kelahiran_tanggal=kelahiran_tanggal,
-            alamat_tinggal=alamat_tinggal,
-            pendataan_tanggal=pendataan_tanggal,
-            sambung_desa=sambung_desa,
-            sambung_kelompok=sambung_kelompok,
-            hobi=hobi,
-            sekolah_kelas=sekolah_kelas,
-            nomor_hape=nomor_hape,
-            nama_ayah=nama_ayah,
-            nama_ibu=nama_ibu,
-            status_ayah=status_ayah,
-            status_ibu=status_ibu
-        )
+        with get_db() as db:
+            # Create biodata model
+            biodata = BiodataGenerusModel(
+                nama_lengkap=nama_lengkap,
+                nama_panggilan=nama_panggilan,
+                kelahiran_tempat=kelahiran_tempat,
+                kelahiran_tanggal=kelahiran_tanggal,
+                alamat_tinggal=alamat_tinggal,
+                pendataan_tanggal=pendataan_tanggal,
+                sambung_desa=sambung_desa,
+                sambung_kelompok=sambung_kelompok,
+                hobi=hobi,
+                sekolah_kelas=sekolah_kelas,
+                nomor_hape=nomor_hape,
+                nama_ayah=nama_ayah,
+                nama_ibu=nama_ibu,
+                status_ayah=status_ayah,
+                status_ibu=status_ibu
+            )
+            
+            # Save to database
+            db.add(biodata)
+            db.commit()
+            db.refresh(biodata)
+            result = BiodataGenerusResponse.model_validate(biodata)
         
-        # Save to database
-        db.add(biodata)
-        db.commit()
-        db.refresh(biodata)
-        
-        return biodata
+        return result
     except Exception as e:
-        db.rollback()
         raise HTTPException(status_code=500, detail=f"Error creating biodata: {str(e)}")
