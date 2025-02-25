@@ -1,4 +1,4 @@
-from sqlmodel import SQLModel, create_engine, Session
+from sqlmodel import SQLModel, create_engine, Session  # type: ignore
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.pool import QueuePool
 from contextlib import contextmanager
@@ -98,28 +98,39 @@ async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Asynchronous database session generator with retry mechanism.
     """
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=4, max=10),
-        reraise=True
-    )
-    async def _get_async_session():
+    # Create a session directly - we'll handle retries within this function
+    async_session = None
+    retry_count = 0
+    max_retries = 3
+    
+    while retry_count < max_retries:
         try:
-            async with AsyncSession(async_engine) as session:
-                return session
+            # Try to create a session
+            async_session = AsyncSession(async_engine)
+            # If successful, yield the session and break out of retry loop
+            yield async_session
+            # After the yield returns (when the client is done with the session)
+            break
         except Exception as e:
-            logger.error(f"Failed to create async database session: {e}")
-            raise
-
-    try:
-        async_session = await _get_async_session()
-        yield async_session
-    except Exception as e:
-        logger.error(f"Async database session error: {e}")
-        await async_session.rollback()
-        raise
-    finally:
-        await async_session.close()
+            retry_count += 1
+            wait_time = min(2 ** retry_count, 10)  # Exponential backoff
+            logger.error(f"Failed to create async database session (attempt {retry_count}/{max_retries}): {e}")
+            
+            if retry_count >= max_retries:
+                logger.error("Maximum retry attempts reached. Raising exception.")
+                raise
+            
+            # Wait before retrying
+            import asyncio
+            await asyncio.sleep(wait_time)
+    
+    # Handle cleanup
+    if async_session is not None:
+        try:
+            # Session won't be None here since we only reach this point if session creation succeeded
+            await async_session.close()
+        except Exception as e:
+            logger.error(f"Error while closing async session: {e}")
 
 # Helper function to check database health
 @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
@@ -130,7 +141,8 @@ async def check_database_health() -> bool:
     """
     try:
         async with async_engine.connect() as conn:
-            await conn.execute("SELECT 1")
+            from sqlalchemy import text
+            await conn.execute(text("SELECT 1"))
         return True
     except Exception as e:
         logger.error(f"Database health check failed: {e}")
