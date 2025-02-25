@@ -1,3 +1,7 @@
+from contextlib import asynccontextmanager
+import os
+
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_cache import FastAPICache
@@ -5,11 +9,17 @@ from fastapi_cache.backends.redis import RedisBackend
 from fastapi_limiter import FastAPILimiter
 from redis import asyncio as aioredis
 from sqlmodel import SQLModel
-import os
-import uvicorn
+
 from core.db import engine
-from endpoints import absen_pengajian, absen_asramaan, data_daerah, data_materi, sesi, url
-from contextlib import asynccontextmanager
+from endpoints import (
+    absen_asramaan,
+    absen_pengajian,
+    data_daerah,
+    data_materi,
+    sesi,
+    url,
+)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -18,7 +28,11 @@ async def lifespan(app: FastAPI):
         SQLModel.metadata.create_all(engine)
 
         # Initialize Redis using container name
-        redis = aioredis.from_url(f"redis://{os.getenv('REDIS_CONTAINER_NAME', 'localhost')}:6379", encoding="utf8", decode_responses=True)
+        redis = aioredis.from_url(
+            f"redis://{os.getenv('REDIS_CONTAINER_NAME', 'localhost')}:6379",
+            encoding="utf8",
+            decode_responses=True,
+        )
         await FastAPILimiter.init(redis)
         FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
     except Exception as e:
@@ -26,11 +40,12 @@ async def lifespan(app: FastAPI):
         raise
     yield
 
+
 app = FastAPI(
-    docs_url=None, 
+    docs_url=None,
     redoc_url=None,
     openapi_url=None,
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -51,7 +66,8 @@ app.include_router(data_materi.router, prefix="/data/materi", tags=["data-materi
 
 @app.get("/")
 async def root():
-    return {"message": "This is API. Not web page!!"}
+    return {"message": "ERRORR!!! This is API. Not web page!!"}
+
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
