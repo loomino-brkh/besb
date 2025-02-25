@@ -20,7 +20,6 @@ from endpoints import (
     url,
 )
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
