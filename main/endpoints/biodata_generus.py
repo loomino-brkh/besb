@@ -1,0 +1,61 @@
+from fastapi import APIRouter, Depends, Form, HTTPException
+from sqlmodel import Session
+from typing import Optional
+from datetime import date
+
+from core.db import get_db_dependency
+from schema.biodata_generus_schema import BiodataGenerusModel, BiodataGenerusResponse
+
+router = APIRouter()
+
+@router.post("/", response_model=BiodataGenerusResponse)
+async def create_biodata(
+    nama_lengkap: str = Form(...),
+    nama_panggilan: str = Form(...),
+    kelahiran_tempat: str = Form(...),
+    kelahiran_tanggal: date = Form(...),
+    alamat_tinggal: str = Form(...),
+    pendataan_tanggal: date = Form(...),
+    sambung_desa: str = Form(...),
+    sambung_kelompok: str = Form(...),
+    hobi: str = Form(...),
+    sekolah_kelas: str = Form(...),
+    nomor_hape: Optional[str] = Form(None),
+    nama_ayah: str = Form(...),
+    nama_ibu: str = Form(...),
+    status_ayah: str = Form(...),
+    status_ibu: str = Form(...),
+    db: Session = Depends(get_db_dependency)
+):
+    """
+    Create a new biodata entry for generus
+    """
+    try:
+        # Create biodata model
+        biodata = BiodataGenerusModel(
+            nama_lengkap=nama_lengkap,
+            nama_panggilan=nama_panggilan,
+            kelahiran_tempat=kelahiran_tempat,
+            kelahiran_tanggal=kelahiran_tanggal,
+            alamat_tinggal=alamat_tinggal,
+            pendataan_tanggal=pendataan_tanggal,
+            sambung_desa=sambung_desa,
+            sambung_kelompok=sambung_kelompok,
+            hobi=hobi,
+            sekolah_kelas=sekolah_kelas,
+            nomor_hape=nomor_hape,
+            nama_ayah=nama_ayah,
+            nama_ibu=nama_ibu,
+            status_ayah=status_ayah,
+            status_ibu=status_ibu
+        )
+        
+        # Save to database
+        db.add(biodata)
+        db.commit()
+        db.refresh(biodata)
+        
+        return biodata
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Error creating biodata: {str(e)}")
