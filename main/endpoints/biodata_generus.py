@@ -44,7 +44,9 @@ async def create_biodata(
     nama_ayah: str = Form(...),
     nama_ibu: str = Form(...),
     status_ayah: str = Form(...),
-    status_ibu: str = Form(...)
+    status_ibu: str = Form(...),
+    nomor_hape_ayah: Optional[str] = Form(None),
+    nomor_hape_ibu: Optional[str] = Form(None)
 ):
     """
     Create a new biodata entry for generus
@@ -67,7 +69,9 @@ async def create_biodata(
                 nama_ayah=nama_ayah,
                 nama_ibu=nama_ibu,
                 status_ayah=status_ayah,
-                status_ibu=status_ibu
+                status_ibu=status_ibu,
+                nomor_hape_ayah=nomor_hape_ayah,
+                nomor_hape_ibu=nomor_hape_ibu
             )
             
             # Save to database
