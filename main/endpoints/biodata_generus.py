@@ -1,13 +1,18 @@
 from fastapi import APIRouter, Depends, Form, HTTPException
-from sqlmodel import Session, select  # updated import to include "select"
+from sqlmodel import select
 from typing import Optional
 from datetime import date
 
 from core.db import get_db
 from core.auth import verify_write_permission
-from schema.biodata_generus_schema import BiodataGenerusModel, BiodataGenerusResponse, BiodataGenerusGetResponse
+from schema.biodata_generus_schema import (
+    BiodataGenerusModel,
+    BiodataGenerusResponse,
+    BiodataGenerusGetResponse,
+)
 
 router = APIRouter()
+
 
 @router.get("/", response_model=list[BiodataGenerusGetResponse])
 async def get_biodata():
@@ -18,17 +23,28 @@ async def get_biodata():
         with get_db() as db:
             # updated deprecated query syntax
             biodata = db.exec(select(BiodataGenerusModel)).all()
-            result = [BiodataGenerusGetResponse(
-                nama_lengkap=data.nama_lengkap,
-                nama_panggilan=data.nama_panggilan,
-                sambung_desa=data.sambung_desa,
-                sambung_kelompok=data.sambung_kelompok
-            ) for data in biodata]
+            result = [
+                BiodataGenerusGetResponse(
+                    nama_lengkap=data.nama_lengkap,
+                    nama_panggilan=data.nama_panggilan,
+                    sambung_desa=data.sambung_desa,
+                    sambung_kelompok=data.sambung_kelompok,
+                    jenis_kelamin=data.jenis_kelamin,
+                )
+                for data in biodata
+            ]
             return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error retrieving biodata: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error retrieving biodata: {str(e)}"
+        )
 
-@router.post("/", response_model=BiodataGenerusResponse, dependencies=[Depends(verify_write_permission)])
+
+@router.post(
+    "/",
+    response_model=BiodataGenerusResponse,
+    dependencies=[Depends(verify_write_permission)],
+)
 async def create_biodata(
     nama_lengkap: str = Form(...),
     nama_panggilan: str = Form(...),
@@ -46,7 +62,9 @@ async def create_biodata(
     status_ayah: str = Form(...),
     status_ibu: str = Form(...),
     nomor_hape_ayah: Optional[str] = Form(None),
-    nomor_hape_ibu: Optional[str] = Form(None)
+    nomor_hape_ibu: Optional[str] = Form(None),
+    jenis_kelamin: str = Form(...),
+    daerah: str = Form(...),
 ):
     """
     Create a new biodata entry for generus
@@ -71,15 +89,16 @@ async def create_biodata(
                 status_ayah=status_ayah,
                 status_ibu=status_ibu,
                 nomor_hape_ayah=nomor_hape_ayah,
-                nomor_hape_ibu=nomor_hape_ibu
+                nomor_hape_ibu=nomor_hape_ibu,
+                jenis_kelamin=jenis_kelamin,
+                daerah=daerah,
             )
-            
-            # Save to database
+
             db.add(biodata)
             db.commit()
             db.refresh(biodata)
             result = BiodataGenerusResponse.model_validate(biodata)
-        
+
         return result
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error creating biodata: {str(e)}")
