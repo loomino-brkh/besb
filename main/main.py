@@ -1,5 +1,7 @@
 import os
 import uvicorn
+import logging
+from datetime import datetime
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,8 +23,10 @@ from endpoints import (
 
 
 @asynccontextmanager
-async def lifespan(_app: FastAPI):
+async def lifespan(app: FastAPI):
     try:
+        app.state.startup_time = datetime.now()
+        print(f"Application started at: {app.state.startup_time}")
         # Create database tables
         SQLModel.metadata.create_all(engine)
 
@@ -38,6 +42,9 @@ async def lifespan(_app: FastAPI):
         print(f"Startup error: {e}")
         raise
     yield
+    # Cleanup resources on shutdown
+    shutdown_time = datetime.now()
+    print(f"Application ran for {shutdown_time - app.state.startup_time}")
 
 
 app = FastAPI(
