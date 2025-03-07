@@ -1,7 +1,6 @@
-from contextlib import asynccontextmanager
 import os
-
 import uvicorn
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_cache import FastAPICache
@@ -9,7 +8,6 @@ from fastapi_cache.backends.redis import RedisBackend
 from fastapi_limiter import FastAPILimiter
 from redis import asyncio as aioredis
 from sqlmodel import SQLModel
-
 from core.db import engine
 from endpoints import (
     absen_asramaan,
