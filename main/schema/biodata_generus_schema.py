@@ -29,7 +29,7 @@ class BiodataGenerusCreate(BiodataGenerusBase):
     pass
 
 
-class BiodataGenerusModel(BiodataGenerusBase, table=True):
+class BiodataGenerusModel(BiodataGenerusBase, SQLModel, table=True):
     __tablename__: str = "biodata_generus"
 
     id: Optional[int] = Field(default=None, primary_key=True)
