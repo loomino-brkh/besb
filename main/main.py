@@ -64,7 +64,11 @@ app.include_router(
 app.include_router(
     biodata_generus.router, prefix="/biodata/generus", tags=["biodata-generus"]
 )
-app.include_router(data_daerah.router, prefix="/data/daerah", tags=["data-daerah"])
+app.include_router(
+    data_daerah.router,
+    prefix="/data/daerah",
+    tags=["data-daerah"]
+)
 app.include_router(sesi.router, prefix="/data/sesi", tags=["sesi"])
 app.include_router(url.router, prefix="/url", tags=["url"])
 app.include_router(data_materi.router, prefix="/data/materi", tags=["data-materi"])
