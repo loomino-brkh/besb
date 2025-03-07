@@ -21,12 +21,13 @@ from endpoints import (
     url,
 )
 
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
         app.state.startup_time = datetime.now()
-        print(f"Application started at: {app.state.startup_time}")
         # Create database tables
         SQLModel.metadata.create_all(engine)
 
@@ -42,9 +43,8 @@ async def lifespan(app: FastAPI):
         print(f"Startup error: {e}")
         raise
     yield
-    # Cleanup resources on shutdown
-    shutdown_time = datetime.now()
-    print(f"Application ran for {shutdown_time - app.state.startup_time}")
+    runtime = datetime.now() - app.state.startup_time
+    logger.info(f"Application ran for {runtime}")
 
 
 app = FastAPI(
