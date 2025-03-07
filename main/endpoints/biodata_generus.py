@@ -101,4 +101,7 @@ async def create_biodata(
 
         return result
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error creating biodata: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error creating biodata: {str(e)}"
+        )
