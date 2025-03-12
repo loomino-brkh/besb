@@ -102,7 +102,7 @@ app.include_router(
 @app.get("/")
 async def root():
     return {
-        "error": "Invalid access. This endpoint is intended for API interactions only. "
+        "error": "Invalid access. This endpoint is intended for API only."
     }
 
 
