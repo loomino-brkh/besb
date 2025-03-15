@@ -60,6 +60,7 @@ app.add_middleware(
         "https://ngaji.brkh.work",
         "https://29.brkh.work",
         "https://hj.brkh.work",
+        "https://hd.brkh.work",
     ],
     allow_credentials=True,
     allow_methods=["*"],
