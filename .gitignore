@@ -69,3 +69,5 @@ versions/
 .vscode/
 memory-bank/
 .clinerules
+.zed/
+.venv/
