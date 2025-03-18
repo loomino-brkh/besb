@@ -4,7 +4,7 @@ from typing import Optional
 from datetime import date
 
 from core.db import get_db
-from core.auth import verify_write_permission
+from core.auth import (verify_write_permission, verify_read_permission)
 from schema.biodata_generus_schema import (
     BiodataGenerusModel,
     BiodataGenerusResponse,
@@ -14,7 +14,11 @@ from schema.biodata_generus_schema import (
 router = APIRouter()
 
 
-@router.get("/", response_model=list[BiodataGenerusGetResponse])
+@router.get(
+    "/",
+    response_model=list[BiodataGenerusGetResponse],
+    dependencies=[Depends(verify_read_permission)],
+)
 async def get_biodata():
     """
     Get all biodata entries for generus
