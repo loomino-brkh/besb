@@ -67,42 +67,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(
-    absen_pengajian.router,
-    prefix="/absen-pengajian",
-    tags=["absen-pengajian"]
-)
-app.include_router(
-    absen_asramaan.router,
-    prefix="/absen-asramaan",
-    tags=["absen-asramaan"]
-)
-app.include_router(
-    biodata_generus.router,
-    prefix="/biodata/generus",
-    tags=["biodata-generus"]
-)
-app.include_router(
-    data_daerah.router,
-    prefix="/data/daerah",
-    tags=["data-daerah"]
-)
-app.include_router(
-    sesi.router,
-    prefix="/data/sesi",
-    tags=["sesi"]
-)
-app.include_router(
-    url.router,
-    prefix="/url",
-    tags=["url"]
-)
-app.include_router(
-    data_materi.router,
-    prefix="/data/materi",
-    tags=["data-materi"]
-)
+routers = [
+    (absen_pengajian.router, "/absen-pengajian", ["absen-pengajian"]),
+    (absen_asramaan.router, "/absen-asramaan", ["absen-asramaan"]),
+    (biodata_generus.router, "/biodata/generus", ["biodata-generus"]),
+    (data_daerah.router, "/data/daerah", ["data-daerah"]),
+    (sesi.router, "/data/sesi", ["sesi"]),
+    (url.router, "/url", ["url"]),
+    (data_materi.router, "/data/materi", ["data-materi"]),
+]
 
+for router, prefix, tags in routers:
+    app.include_router(router, prefix=prefix, tags=[str(tag) for tag in tags])
 
 @app.get("/")
 async def root():
