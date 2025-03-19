@@ -7,6 +7,7 @@ import sys
 import importlib
 import glob
 from pathlib import Path
+from sqlmodel import SQLModel
 
 # Set up custom logger for migration process
 logger = logging.getLogger("alembic.migration")
@@ -14,8 +15,6 @@ logger = logging.getLogger("alembic.migration")
 # Add the main directory to the system path for proper module imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# Import SQLModel for metadata access (used by Alembic to detect and track models)
-from sqlmodel import SQLModel
 
 # Dynamically import all Python files that might contain SQLModel models
 # This ensures Alembic can detect all model definitions for migration generation
