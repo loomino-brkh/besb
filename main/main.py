@@ -80,6 +80,7 @@ routers = [
 for router, prefix, tags in routers:
     app.include_router(router, prefix=prefix, tags=[str(tag) for tag in tags])
 
+
 @app.get("/")
 async def root():
     return {
