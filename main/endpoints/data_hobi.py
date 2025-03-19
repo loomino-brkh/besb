@@ -21,7 +21,7 @@ async def get_hobi_data(
         if not data:
             return []
 
-        return [{"kategori": item.kategori, "hobi": item.hobi, "detail_hobi": item.detail_hobi} for item in data]
+        return [{"kategori": item.kategori, "hobi": item.hobi} for item in data]
     except Exception as e:
         import traceback
         error_details = {
