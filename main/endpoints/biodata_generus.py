@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Form, HTTPException
 from sqlmodel import select
-from typing import Optional
+from typing import Optional, Dict
+import json
 from datetime import date
 from fastapi_cache.decorator import cache
 
@@ -60,7 +61,7 @@ async def create_biodata(
     pendataan_tanggal: date = Form(...),
     sambung_desa: str = Form(...),
     sambung_kelompok: str = Form(...),
-    hobi: str = Form(...),
+    hobi: str = Form(...),  # Keep as string in Form, will parse to dict
     sekolah_kelas: str = Form(...),
     nomor_hape: Optional[str] = Form(None),
     nama_ayah: str = Form(...),
@@ -76,6 +77,9 @@ async def create_biodata(
     Create a new biodata entry for generus
     """
     try:
+        # Parse hobi from JSON string to dictionary
+        hobi_dict = json.loads(hobi) if hobi else None
+        
         with get_db() as db:
             # Create biodata model
             biodata = BiodataGenerusModel(
@@ -87,7 +91,7 @@ async def create_biodata(
                 pendataan_tanggal=pendataan_tanggal,
                 sambung_desa=sambung_desa,
                 sambung_kelompok=sambung_kelompok,
-                hobi=hobi,
+                hobi=hobi_dict,
                 sekolah_kelas=sekolah_kelas,
                 nomor_hape=nomor_hape,
                 nama_ayah=nama_ayah,
@@ -106,6 +110,11 @@ async def create_biodata(
             result = BiodataGenerusResponse.model_validate(biodata)
 
         return result
+    except json.JSONDecodeError:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid JSON format for hobi field"
+        )
     except Exception as e:
         raise HTTPException(
             status_code=500,

@@ -1,6 +1,7 @@
-from typing import Optional
+from typing import Optional, Dict
 from datetime import date
 from sqlmodel import SQLModel, Field
+from sqlalchemy import JSON
 
 
 class BiodataGenerusBase(SQLModel):
@@ -12,7 +13,7 @@ class BiodataGenerusBase(SQLModel):
     pendataan_tanggal: date
     sambung_desa: str
     sambung_kelompok: str
-    hobi: str
+    hobi: Optional[Dict[str, str]] = Field(default=None, sa_type=JSON)
     sekolah_kelas: str
     nomor_hape: Optional[str] = None
     nama_ayah: str
