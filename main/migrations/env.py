@@ -1,8 +1,12 @@
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from alembic import context
-import os, sys, importlib, glob
+import os
+import sys
+import importlib
+import glob
 from pathlib import Path
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Import all models - dynamically import all Python files that might contain models
@@ -59,7 +63,7 @@ def run_migrations_online() -> None:
     configuration = config.get_section(config.config_ini_section)
     if configuration is not None:
         configuration["sqlalchemy.url"] = get_url()
-    
+
     connectable = engine_from_config(
         configuration or {},
         prefix="sqlalchemy.",
