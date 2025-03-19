@@ -24,7 +24,7 @@ class AbsenAsramaanBase(SQLModel):
 
 class AbsenAsramaan(AbsenAsramaanBase, table=True):
     __table_args__ = {'extend_existing': True}
-    __tablename__:str = 'absen_asramaan'
+    __tablename__:str = 'rec_absen_asramaan'
     id: Optional[int] = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 

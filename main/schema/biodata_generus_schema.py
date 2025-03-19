@@ -31,7 +31,7 @@ class BiodataGenerusCreate(BiodataGenerusBase):
 
 class BiodataGenerusModel(BiodataGenerusBase, table=True):
     __table_args__ = {"extend_existing": True}
-    __tablename__: str = "biodata_generus"
+    __tablename__: str = "data_biodata_generus"
 
     id: Optional[int] = Field(default=None, primary_key=True)
     created_at: str = Field(default_factory=lambda: date.today().isoformat())

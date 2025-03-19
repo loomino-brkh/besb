@@ -23,7 +23,7 @@ class AbsenPengajianBase(SQLModel):
 
 class AbsenPengajian(AbsenPengajianBase, table=True):
     __table_args__ = {'extend_existing': True}
-    __tablename__:str = 'absen_pengajian'
+    __tablename__:str = 'rec_absen_pengajian'
     id: Optional[int] = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
