@@ -23,6 +23,8 @@ class AbsenAsramaanBase(SQLModel):
             raise ValueError('jam_hadir must be in HH:mm format')
 
 class AbsenAsramaan(AbsenAsramaanBase, table=True):
+    __table_args__ = {'extend_existing': True}
+    __tablename__:str = 'absen_asramaan'
     id: Optional[int] = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -32,7 +34,7 @@ class AbsenAsramaanCreate(AbsenAsramaanBase):
 class AbsenAsramaanRead(AbsenAsramaanBase):
     id: int
     created_at: datetime
-    
+
     class Config:
         json_encoders = {
             datetime: lambda dt: dt.strftime('%Y-%m-%d')

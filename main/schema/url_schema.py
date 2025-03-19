@@ -11,6 +11,7 @@ class URLBase(SQLModel):
     url: str = Field(...)
 
 class URL(URLBase, table=True):
+    __table_args__ = {'extend_existing': True}
     __tablename__: str = "urls"
     id: Optional[int] = Field(default=None, primary_key=True)
     url_code: str = Field(default_factory=lambda: generate_code(), unique=True)

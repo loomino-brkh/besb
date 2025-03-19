@@ -30,6 +30,7 @@ class BiodataGenerusCreate(BiodataGenerusBase):
 
 
 class BiodataGenerusModel(BiodataGenerusBase, table=True):
+    __table_args__ = {"extend_existing": True}
     __tablename__: str = "biodata_generus"
 
     id: Optional[int] = Field(default=None, primary_key=True)
