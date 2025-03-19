@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import select
-from typing import List, Optional
+from typing import Optional
+from fastapi_cache.decorator import cache
 
 from core.db import get_async_db
 from schema.data_materi_schema import DataMateri
@@ -34,23 +35,24 @@ def format_materi_response(items):
 
 def build_query(kategori: str, detail_kategori: Optional[str] = None):
     """Build the database query based on provided parameters"""
-    query = select(
+    query = select([
         DataMateri.materi,
         DataMateri.detail_materi,
         DataMateri.detail_kategori,
         DataMateri.indikator,
         DataMateri.indikator_mulai,
         DataMateri.indikator_akhir
-    )
-    
+    ])
+
     conditions = [DataMateri.kategori == kategori]
     if detail_kategori:
         conditions.append(DataMateri.detail_kategori == detail_kategori)
-    
+
     return query.where(*conditions)
 
 @router.get("/{kategori}")
 @router.get("/{kategori}/{detail_kategori}")
+@cache(expire=300)  # Cache for 5 minutes
 async def get_data_materi(
     kategori: str,
     detail_kategori: Optional[str] = None,
@@ -60,15 +62,15 @@ async def get_data_materi(
         query = build_query(kategori, detail_kategori)
         result = await db.execute(query)
         data = result.all()
-        
+
         if not data:
             error_msg = f"No data found for kategori: {kategori}"
             if detail_kategori:
                 error_msg += f" and detail_kategori: {detail_kategori}"
             raise HTTPException(status_code=404, detail=error_msg)
-        
+
         return format_materi_response(data)
-        
+
     except HTTPException:
         raise
     except Exception as e:

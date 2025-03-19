@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends, Form
+from fastapi_cache.decorator import cache
 from sqlmodel import Session, select, and_
-from fastapi.concurrency import run_in_threadpool
 from typing import List, Optional
-from datetime import datetime, date, timedelta
-from schema.absen_pengajian_schema import AbsenPengajian, AbsenPengajianCreate, AbsenPengajianRead
+from datetime import datetime, timedelta
+from schema.absen_pengajian_schema import AbsenPengajian, AbsenPengajianRead
 from core.db import get_db
 from core.auth import verify_read_permission, verify_write_permission
 
@@ -13,7 +13,7 @@ async def check_duplicate_pengajian(db: Session, acara: str, tanggal: datetime, 
     # Get the time window (2 hours before and after current time)
     time_window_start = tanggal - timedelta(hours=2)
     time_window_end = tanggal + timedelta(hours=2)
-    
+
     # Query for duplicates within time window
     query = select(AbsenPengajian).where(
         AbsenPengajian.acara == acara,
@@ -24,7 +24,7 @@ async def check_duplicate_pengajian(db: Session, acara: str, tanggal: datetime, 
         AbsenPengajian.tanggal >= time_window_start,
         AbsenPengajian.tanggal <= time_window_end
     )
-    
+
     result = db.exec(query).first()
     return result is not None
 
@@ -42,7 +42,7 @@ async def create_absen(
         # Convert string date to datetime and add time component from jam_hadir
         tanggal_dt = datetime.strptime(tanggal, '%Y-%m-%d')
         full_dt = datetime.combine(tanggal_dt.date(), datetime.strptime(jam_hadir, '%H:%M').time())
-        
+
         # Use the database session in a context manager
         with get_db() as db:
             # Check for duplicates
@@ -55,13 +55,13 @@ async def create_absen(
                 ranah=ranah,
                 detail_ranah=detail_ranah
             )
-            
+
             if is_duplicate:
                 raise HTTPException(
                     status_code=409,
                     detail="Duplicate entry detected: Similar attendance record exists within 2 hours"
                 )
-            
+
             # Create AbsenPengajian instance
             db_absen = AbsenPengajian(
                 acara=acara,
@@ -72,15 +72,15 @@ async def create_absen(
                 ranah=ranah,
                 detail_ranah=detail_ranah
             )
-            
+
             db.add(db_absen)
             db.commit()
             db.refresh(db_absen)
             # Create a copy of the data before session closes
             result = AbsenPengajianRead.model_validate(db_absen)
-        
+
         return result
-        
+
     except ValueError as e:
         raise HTTPException(
             status_code=422,
@@ -93,6 +93,7 @@ async def create_absen(
         )
 
 @router.get("/", response_model=List[AbsenPengajianRead], dependencies=[Depends(verify_read_permission)])
+@cache(expire=600)  # Cache results for 10 minutes
 async def list_absen(
     tanggal: Optional[str] = None,
     acara: Optional[str] = None,
@@ -101,7 +102,7 @@ async def list_absen(
     try:
         with get_db() as db:
             query = select(AbsenPengajian)
-            
+
             # Apply filters if parameters are provided
             if tanggal:
                 try:
@@ -117,13 +118,13 @@ async def list_absen(
                         status_code=422,
                         detail="Invalid date format. Date should be YYYY-MM-DD"
                     )
-            
+
             if acara:
                 query = query.filter(and_(AbsenPengajian.acara == acara))
-            
+
             if lokasi:
                 query = query.filter(and_(AbsenPengajian.lokasi == lokasi))
-            
+
             absen_list = db.exec(query).all()
             # Convert to response model to ensure we have all data before session closes
             result = [AbsenPengajianRead.model_validate(absen) for absen in absen_list]
@@ -137,6 +138,7 @@ async def list_absen(
         )
 
 @router.get("/{absen_id}", response_model=AbsenPengajianRead, dependencies=[Depends(verify_read_permission)])
+@cache(expire=300)  # Cache individual record lookups for 5 minutes
 async def get_absen(absen_id: int):
     try:
         with get_db() as db:

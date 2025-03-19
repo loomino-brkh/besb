@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException
 from sqlmodel import select
 from typing import Optional
 from datetime import date
+from fastapi_cache.decorator import cache
 
 from core.db import get_db
 from core.auth import (verify_write_permission, verify_read_permission)
@@ -19,6 +20,7 @@ router = APIRouter()
     response_model=list[BiodataGenerusGetResponse],
     dependencies=[Depends(verify_read_permission)],
 )
+@cache(expire=300)  # Cache response for 5 minutes
 async def get_biodata():
     """
     Get all biodata entries for generus
