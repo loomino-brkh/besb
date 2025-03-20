@@ -2,6 +2,8 @@ from typing import Optional, Dict
 from datetime import date
 from sqlmodel import SQLModel, Field
 from sqlalchemy import JSON
+from pydantic import field_validator
+import json
 
 
 class BiodataGenerusBase(SQLModel):
@@ -41,6 +43,17 @@ class BiodataGenerusModel(BiodataGenerusBase, table=True):
 class BiodataGenerusResponse(BiodataGenerusBase):
     id: int
     created_at: str
+
+    @field_validator("hobi", mode="before")
+    def ensure_hobi_dict(cls, v):
+        if v is None:
+            return v
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except Exception:
+                raise ValueError("hobi must be a valid JSON dictionary")
+        return v
 
 
 class BiodataGenerusGetResponse(SQLModel):
