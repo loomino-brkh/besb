@@ -20,6 +20,7 @@ from endpoints import (
     sesi,
     url,
     data_hobi,
+    data_kelas_sekolah,
 )
 
 logger = logging.getLogger(__name__)
@@ -77,6 +78,7 @@ routers = [
     (url.router, "/url", ["url"]),
     (data_materi.router, "/data/materi", ["data-materi"]),
     (data_hobi.router, "/data/hobi", ["data-hobi"]),
+    (data_kelas_sekolah.router, "/data/kelas-sekolah", ["data-kelas-sekolah"]),
 ]
 
 for router, prefix, tags in routers:
