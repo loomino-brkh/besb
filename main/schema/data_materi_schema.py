@@ -1,5 +1,6 @@
 from sqlmodel import SQLModel, Field
 
+
 class DataMateri(SQLModel, table=True):
     __table_args__ = {'extend_existing': True}
     __tablename__: str = "data_materi"
