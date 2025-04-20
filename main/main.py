@@ -37,7 +37,7 @@ async def lifespan(app: FastAPI):
         redis = aioredis.from_url(
             f"redis://{os.getenv('REDIS_CONTAINER_NAME', 'localhost')}:6379",
             encoding="utf8",
-            decode_responses=True,
+            decode_responses=False,
         )
         await FastAPILimiter.init(redis)
         FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
