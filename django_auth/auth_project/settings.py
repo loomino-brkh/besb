@@ -4,11 +4,20 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'Pxf0AsnFeejnpZfp4Ya8F4wsyJcqSV2Q')
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
+    'Pxf0AsnFeejnpZfp4Ya8F4wsyJcqSV2Q'
+)
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['api.var.my.id', 'localhost', '127.0.0.1', 'besb-django', 'besb_django']
+ALLOWED_HOSTS = [
+    'api.var.my.id',
+    'localhost',
+    '127.0.0.1',
+    'besb-django',
+    'besb_django'
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
