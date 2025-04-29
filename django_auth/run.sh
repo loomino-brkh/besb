@@ -3,8 +3,8 @@ source /app/support/venv/bin/activate
 cd /app/django_auth
 
 # Apply migrations
-python manage.py makemigrations
-python manage.py migrate
+#python manage.py makemigrations
+#python manage.py migrate
 
 # Create superuser if it doesn't exist
 #python manage.py shell <<EOF
