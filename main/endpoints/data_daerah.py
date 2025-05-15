@@ -11,7 +11,7 @@ router = APIRouter()
 
 
 @router.get("/{daerah}")
-# @cache(expire=300)  # Cache results for 5 minutes
+@cache(expire=300)  # Cache results for 5 minutes
 async def get_data_by_daerah(daerah: str, db=Depends(get_async_db)):
     query = select(DataDaerah.ranah, DataDaerah.detail_ranah).where(
         DataDaerah.daerah == daerah
