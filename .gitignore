@@ -71,3 +71,4 @@ memory-bank/
 .clinerules
 .zed/
 .venv/
+pyrightconfig.json
