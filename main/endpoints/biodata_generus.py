@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, Form, HTTPException
 from sqlmodel import select
-from typing import Optional, Dict
+from typing import Optional
 import json
 from datetime import date
 from fastapi_cache.decorator import cache
 
 from core.db import get_db
-from core.auth import (verify_write_permission, verify_read_permission)
+from core.auth import verify_write_permission, verify_read_permission
 from schema.biodata_generus_schema import (
     BiodataGenerusModel,
     BiodataGenerusResponse,
@@ -79,7 +79,7 @@ async def create_biodata(
     try:
         # Parse hobi from JSON string to dictionary
         hobi_dict = json.loads(hobi) if hobi else None
-        
+
         with get_db() as db:
             # Create biodata model
             biodata = BiodataGenerusModel(
@@ -112,11 +112,7 @@ async def create_biodata(
         return result
     except json.JSONDecodeError:
         raise HTTPException(
-            status_code=400,
-            detail="Invalid JSON format for hobi field"
+            status_code=400, detail="Invalid JSON format for hobi field"
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error creating biodata: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error creating biodata: {str(e)}")
