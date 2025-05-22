@@ -1,9 +1,10 @@
-from typing import Optional, Dict
-from datetime import date
-from sqlmodel import SQLModel, Field
-from sqlalchemy import JSON
-from pydantic import field_validator
 import json
+from datetime import date
+from typing import ClassVar, Dict, Optional, Union
+
+from pydantic import field_validator
+from sqlalchemy import JSON
+from sqlmodel import Field, SQLModel
 
 
 class BiodataGenerusBase(SQLModel):
@@ -34,7 +35,7 @@ class BiodataGenerusCreate(BiodataGenerusBase):
 
 class BiodataGenerusModel(BiodataGenerusBase, table=True):
     __table_args__ = {"extend_existing": True}
-    __tablename__: str = "data_biodata_generus"
+    __tablename__: ClassVar[str] = "data_biodata_generus"  # type: ignore
 
     id: Optional[int] = Field(default=None, primary_key=True)
     created_at: str = Field(default_factory=lambda: date.today().isoformat())
@@ -45,7 +46,9 @@ class BiodataGenerusResponse(BiodataGenerusBase):
     created_at: str
 
     @field_validator("hobi", mode="before")
-    def ensure_hobi_dict(cls, v):
+    def ensure_hobi_dict(
+        cls, v: Optional[Union[Dict[str, str], str]]
+    ) -> Optional[Dict[str, str]]:
         if v is None:
             return v
         if isinstance(v, str):

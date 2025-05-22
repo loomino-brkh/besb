@@ -1,18 +1,18 @@
+from core.db import get_async_db
 from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import select
 
 # from typing import List
 from fastapi_cache.decorator import cache
-
-from core.db import get_async_db
 from schema.data_daerah_schema import DataDaerah
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
 
 router = APIRouter()
 
 
 @router.get("/{daerah}")
 @cache(expire=300)  # Cache results for 5 minutes
-async def get_data_by_daerah(daerah: str, db=Depends(get_async_db)):
+async def get_data_by_daerah(daerah: str, db: AsyncSession = Depends(get_async_db)):
     query = select(DataDaerah.ranah, DataDaerah.detail_ranah).where(
         DataDaerah.daerah == daerah
     )

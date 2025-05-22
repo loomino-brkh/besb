@@ -72,3 +72,5 @@ memory-bank/
 .zed/
 .venv/
 pyrightconfig.json
+
+pyproject.toml

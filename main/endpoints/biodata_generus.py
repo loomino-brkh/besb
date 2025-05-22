@@ -1,17 +1,17 @@
-from fastapi import APIRouter, Depends, Form, HTTPException
-from sqlmodel import select
-from typing import Optional
 import json
 from datetime import date
-from fastapi_cache.decorator import cache
+from typing import Optional
 
+from core.auth import verify_read_permission, verify_write_permission
 from core.db import get_db
-from core.auth import verify_write_permission, verify_read_permission
+from fastapi import APIRouter, Depends, Form, HTTPException
+from fastapi_cache.decorator import cache
 from schema.biodata_generus_schema import (
+    BiodataGenerusGetResponse,
     BiodataGenerusModel,
     BiodataGenerusResponse,
-    BiodataGenerusGetResponse,
 )
+from sqlmodel import select
 
 router = APIRouter()
 

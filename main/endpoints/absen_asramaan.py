@@ -1,15 +1,26 @@
-from fastapi import APIRouter, HTTPException, Depends, Form
-from sqlmodel import Session, select, and_
-from typing import List, Optional
 from datetime import datetime, timedelta
-from schema.absen_asramaan_schema import AbsenAsramaan, AbsenAsramaanRead
-from core.db import get_db
+from typing import List, Optional
+
 from core.auth import verify_read_permission, verify_write_permission
+from core.db import get_db
+from fastapi import APIRouter, Depends, Form, HTTPException
 from fastapi_cache.decorator import cache
+from schema.absen_asramaan_schema import AbsenAsramaan, AbsenAsramaanRead
+from sqlmodel import Session, and_, select
 
 router = APIRouter()
 
-async def check_duplicate_asramaan(db: Session, acara: str, tanggal: datetime, nama: str, lokasi: str, ranah: str, detail_ranah: str, sesi: str) -> bool:
+
+async def check_duplicate_asramaan(
+    db: Session,
+    acara: str,
+    tanggal: datetime,
+    nama: str,
+    lokasi: str,
+    ranah: str,
+    detail_ranah: str,
+    sesi: str,
+) -> bool:
     # Get the time window (2 hours before and after current time)
     time_window_start = tanggal - timedelta(hours=2)
     time_window_end = tanggal + timedelta(hours=2)
@@ -23,13 +34,18 @@ async def check_duplicate_asramaan(db: Session, acara: str, tanggal: datetime, n
         AbsenAsramaan.detail_ranah == detail_ranah,
         AbsenAsramaan.sesi == sesi,
         AbsenAsramaan.tanggal >= time_window_start,
-        AbsenAsramaan.tanggal <= time_window_end
+        AbsenAsramaan.tanggal <= time_window_end,
     )
 
     result = db.exec(query).first()
     return result is not None
 
-@router.post("/", response_model=AbsenAsramaanRead, dependencies=[Depends(verify_write_permission)])
+
+@router.post(
+    "/",
+    response_model=AbsenAsramaanRead,
+    dependencies=[Depends(verify_write_permission)],
+)
 async def create_absen(
     acara: str = Form(),
     tanggal: str = Form(),
@@ -38,12 +54,14 @@ async def create_absen(
     lokasi: str = Form(),
     ranah: str = Form(),
     detail_ranah: str = Form(),
-    sesi: str = Form()
+    sesi: str = Form(),
 ):
     try:
         # Convert string date to datetime and add time component from jam_hadir
-        tanggal_dt = datetime.strptime(tanggal, '%Y-%m-%d')
-        full_dt = datetime.combine(tanggal_dt.date(), datetime.strptime(jam_hadir, '%H:%M').time())
+        tanggal_dt = datetime.strptime(tanggal, "%Y-%m-%d")
+        full_dt = datetime.combine(
+            tanggal_dt.date(), datetime.strptime(jam_hadir, "%H:%M").time()
+        )
 
         # Use the database session in a context manager
         with get_db() as db:
@@ -56,13 +74,13 @@ async def create_absen(
                 lokasi=lokasi,
                 ranah=ranah,
                 detail_ranah=detail_ranah,
-                sesi=sesi
+                sesi=sesi,
             )
 
             if is_duplicate:
                 raise HTTPException(
                     status_code=409,
-                    detail="Duplicate entry detected: Similar attendance record exists within 2 hours"
+                    detail="Duplicate entry detected: Similar attendance record exists within 2 hours",
                 )
 
             # Create AbsenAsramaan instance
@@ -74,7 +92,7 @@ async def create_absen(
                 lokasi=lokasi,
                 ranah=ranah,
                 detail_ranah=detail_ranah,
-                sesi=sesi
+                sesi=sesi,
             )
 
             db.add(db_absen)
@@ -88,21 +106,23 @@ async def create_absen(
     except ValueError as e:
         raise HTTPException(
             status_code=422,
-            detail=f"Invalid date or time format. Date should be YYYY-MM-DD and time should be HH:MM. Error: {str(e)}"
+            detail=f"Invalid date or time format. Date should be YYYY-MM-DD and time should be HH:MM. Error: {str(e)}",
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"An error occurred: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
-@router.get("/", response_model=List[AbsenAsramaanRead], dependencies=[Depends(verify_read_permission)])
+
+@router.get(
+    "/",
+    response_model=List[AbsenAsramaanRead],
+    dependencies=[Depends(verify_read_permission)],
+)
 @cache(expire=300)  # Cache for 5 minutes
 async def list_absen(
     tanggal: Optional[str] = None,
     acara: Optional[str] = None,
     sesi: Optional[str] = None,
-    lokasi: Optional[str] = None
+    lokasi: Optional[str] = None,
 ):
     try:
         with get_db() as db:
@@ -112,16 +132,18 @@ async def list_absen(
             if tanggal:
                 try:
                     # Convert string date to datetime for comparison
-                    filter_date = datetime.strptime(tanggal, '%Y-%m-%d')
+                    filter_date = datetime.strptime(tanggal, "%Y-%m-%d")
                     # Compare only the date part
-                    query = query.filter(and_(
-                        AbsenAsramaan.tanggal >= filter_date,
-                        AbsenAsramaan.tanggal < filter_date + timedelta(days=1)
-                    ))
+                    query = query.filter(
+                        and_(
+                            AbsenAsramaan.tanggal >= filter_date,
+                            AbsenAsramaan.tanggal < filter_date + timedelta(days=1),
+                        )
+                    )
                 except ValueError:
                     raise HTTPException(
                         status_code=422,
-                        detail="Invalid date format. Date should be YYYY-MM-DD"
+                        detail="Invalid date format. Date should be YYYY-MM-DD",
                     )
 
             if acara:
@@ -140,12 +162,14 @@ async def list_absen(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"An error occurred: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
-@router.get("/{absen_id}", response_model=AbsenAsramaanRead, dependencies=[Depends(verify_read_permission)])
+
+@router.get(
+    "/{absen_id}",
+    response_model=AbsenAsramaanRead,
+    dependencies=[Depends(verify_read_permission)],
+)
 @cache(expire=300)  # Cache for 5 minutes
 async def get_absen(absen_id: int):
     try:
@@ -159,7 +183,4 @@ async def get_absen(absen_id: int):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"An error occurred: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")

@@ -1,8 +1,21 @@
-import os
-import uvicorn
 import logging
-from datetime import datetime
+import os
 from contextlib import asynccontextmanager
+from datetime import datetime
+
+import uvicorn
+from core.db import engine
+from endpoints import (
+    absen_asramaan,
+    absen_pengajian,
+    biodata_generus,
+    data_daerah,
+    data_hobi,
+    data_kelas_sekolah,
+    data_materi,
+    sesi,
+    url,
+)
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_cache import FastAPICache
@@ -10,18 +23,6 @@ from fastapi_cache.backends.redis import RedisBackend
 from fastapi_limiter import FastAPILimiter
 from redis import asyncio as aioredis
 from sqlmodel import SQLModel
-from core.db import engine
-from endpoints import (
-    absen_asramaan,
-    absen_pengajian,
-    biodata_generus,
-    data_daerah,
-    data_materi,
-    sesi,
-    url,
-    data_hobi,
-    data_kelas_sekolah,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -34,15 +35,16 @@ async def lifespan(app: FastAPI):
         SQLModel.metadata.create_all(engine)
 
         # Initialize Redis using container name
-        redis = aioredis.from_url(
+        redis = await aioredis.from_url(  # type: ignore
             f"redis://{os.getenv('REDIS_CONTAINER_NAME', 'localhost')}:6379",
             encoding="utf8",
             decode_responses=False,
         )
-        await FastAPILimiter.init(redis)
+        # Type ignore added to handle type checking issues
+        await FastAPILimiter.init(redis)  # type: ignore
         FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
     except Exception as e:
-        print(f"Startup error: {e}")
+        logger.error(f"Startup error: {e}")
         raise
     yield
     runtime = datetime.now() - app.state.startup_time

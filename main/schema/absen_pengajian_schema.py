@@ -1,7 +1,8 @@
-from datetime import datetime
-from typing import Optional
-from sqlmodel import SQLModel, Field
-from pydantic import field_validator
+from datetime import datetime, timezone
+from typing import ClassVar, Optional
+
+from pydantic import ConfigDict, field_validator
+from sqlmodel import Field, SQLModel
 
 
 class AbsenPengajianBase(SQLModel):
@@ -14,7 +15,7 @@ class AbsenPengajianBase(SQLModel):
     detail_ranah: str
 
     @field_validator("jam_hadir")
-    def validate_jam_hadir(cls, v):
+    def validate_jam_hadir(cls, v: str) -> str:
         try:
             # Parse time string and reformat to ensure HH:mm format
             parsed_time = datetime.strptime(v, "%H:%M")
@@ -25,9 +26,9 @@ class AbsenPengajianBase(SQLModel):
 
 class AbsenPengajian(AbsenPengajianBase, table=True):
     __table_args__ = {"extend_existing": True}
-    __tablename__: str = "rec_absen_pengajian"
+    __tablename__: ClassVar[str] = "rec_absen_pengajian"  # type: ignore
     id: Optional[int] = Field(default=None, primary_key=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class AbsenPengajianCreate(AbsenPengajianBase):
@@ -38,5 +39,6 @@ class AbsenPengajianRead(AbsenPengajianBase):
     id: int
     created_at: datetime
 
-    class Config:
-        json_encoders = {datetime: lambda dt: dt.strftime("%Y-%m-%d")}
+    model_config = ConfigDict(  # type: ignore
+        json_encoders={datetime: lambda dt: dt.strftime("%Y-%m-%d")}
+    )

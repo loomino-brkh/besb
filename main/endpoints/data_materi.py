@@ -1,54 +1,61 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import select
-from typing import Optional
-from fastapi_cache.decorator import cache
+from typing import Any, Dict, List, Optional, Sequence
 
 from core.db import get_async_db
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi_cache.decorator import cache
 from schema.data_materi_schema import DataMateri
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql import Select
+from sqlmodel import select
 
 router = APIRouter()
+
 
 async def handle_db_error(e: Exception):
     """Handle database errors and return appropriate HTTP exception"""
     import traceback
+
     error_details = {
         "error_type": type(e).__name__,
         "error_message": str(e),
-        "traceback": traceback.format_exc()
+        "traceback": traceback.format_exc(),
     }
+
     print("Database Error Details:", error_details)  # For logging
     raise HTTPException(
         status_code=500,
-        detail=f"Database error: {error_details['error_type']} - {error_details['error_message']}"
+        detail=f"Database error: {error_details['error_type']} - {error_details['error_message']}",
     )
 
-def format_materi_response(items):
+
+def format_materi_response(items: Sequence[DataMateri]) -> List[Dict[str, Any]]:
     """Format database results into response structure"""
-    return [{
-        "materi": item[0],
-        "detail_materi": item[1],
-        "detail_kategori": item[2],
-        "indikator": item[3],
-        "indikator_mulai": item[4],
-        "indikator_akhir": item[5]
-    } for item in items]
+    return [
+        {
+            "materi": item.materi,
+            "detail_materi": item.detail_materi,
+            "detail_kategori": item.detail_kategori,
+            "indikator": item.indikator,
+            "indikator_mulai": item.indikator_mulai,
+            "indikator_akhir": item.indikator_akhir,
+        }
+        for item in items
+    ]
 
-def build_query(kategori: str, detail_kategori: Optional[str] = None):
+
+def build_query(
+    kategori: str, detail_kategori: Optional[str] = None
+) -> Select[tuple[DataMateri]]:
     """Build the database query based on provided parameters"""
-    query = select([
-        DataMateri.materi,
-        DataMateri.detail_materi,
-        DataMateri.detail_kategori,
-        DataMateri.indikator,
-        DataMateri.indikator_mulai,
-        DataMateri.indikator_akhir
-    ])
+    query = select(DataMateri)
 
-    conditions = [DataMateri.kategori == kategori]
+    # Apply where conditions one at a time
+    query = query.where(DataMateri.kategori == kategori)
     if detail_kategori:
-        conditions.append(DataMateri.detail_kategori == detail_kategori)
+        query = query.where(DataMateri.detail_kategori == detail_kategori)
 
-    return query.where(*conditions)
+    return query
+
 
 @router.get("/{kategori}")
 @router.get("/{kategori}/{detail_kategori}")
@@ -56,12 +63,12 @@ def build_query(kategori: str, detail_kategori: Optional[str] = None):
 async def get_data_materi(
     kategori: str,
     detail_kategori: Optional[str] = None,
-    db=Depends(get_async_db)
+    db: AsyncSession = Depends(get_async_db),
 ):
     try:
         query = build_query(kategori, detail_kategori)
         result = await db.execute(query)
-        data = result.all()
+        data = result.scalars().all()
 
         if not data:
             error_msg = f"No data found for kategori: {kategori}"
