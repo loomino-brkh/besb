@@ -12,10 +12,11 @@ router = APIRouter()
 @cache(expire=300)  # Cache for 5 minutes
 async def get_sesi_by_acara(acara: str, db: AsyncSession = Depends(get_async_db)):
     query = select(Sesi).where(Sesi.acara == acara)
-
+    # Although diagnostics might suggest `exec`, runtime errors indicate `execute` is needed
+    # in this environment for AsyncSession.
     try:
-        result = await db.exec(query)
-        data = result.all()
+        result = await db.execute(query)  # type: ignore
+        data = result.scalars().all()
 
         if not data:
             raise HTTPException(
