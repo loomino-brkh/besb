@@ -9,7 +9,16 @@ from core.auth import verify_read_permission, verify_write_permission
 
 router = APIRouter()
 
-async def check_duplicate_pengajian(db: Session, acara: str, tanggal: datetime, nama: str, lokasi: str, ranah: str, detail_ranah: str) -> bool:
+
+async def check_duplicate_pengajian(
+    db: Session,
+    acara: str,
+    tanggal: datetime,
+    nama: str,
+    lokasi: str,
+    ranah: str,
+    detail_ranah: str,
+) -> bool:
     # Get the time window (2 hours before and after current time)
     time_window_start = tanggal - timedelta(hours=2)
     time_window_end = tanggal + timedelta(hours=2)
@@ -22,13 +31,18 @@ async def check_duplicate_pengajian(db: Session, acara: str, tanggal: datetime, 
         AbsenPengajian.ranah == ranah,
         AbsenPengajian.detail_ranah == detail_ranah,
         AbsenPengajian.tanggal >= time_window_start,
-        AbsenPengajian.tanggal <= time_window_end
+        AbsenPengajian.tanggal <= time_window_end,
     )
 
     result = db.exec(query).first()
     return result is not None
 
-@router.post("/", response_model=AbsenPengajianRead, dependencies=[Depends(verify_write_permission)])
+
+@router.post(
+    "/",
+    response_model=AbsenPengajianRead,
+    dependencies=[Depends(verify_write_permission)],
+)
 async def create_absen(
     acara: str = Form(),
     tanggal: str = Form(),
@@ -36,12 +50,14 @@ async def create_absen(
     nama: str = Form(),
     lokasi: str = Form(),
     ranah: str = Form(),
-    detail_ranah: str = Form()
+    detail_ranah: str = Form(),
 ):
     try:
         # Convert string date to datetime and add time component from jam_hadir
-        tanggal_dt = datetime.strptime(tanggal, '%Y-%m-%d')
-        full_dt = datetime.combine(tanggal_dt.date(), datetime.strptime(jam_hadir, '%H:%M').time())
+        tanggal_dt = datetime.strptime(tanggal, "%Y-%m-%d")
+        full_dt = datetime.combine(
+            tanggal_dt.date(), datetime.strptime(jam_hadir, "%H:%M").time()
+        )
 
         # Use the database session in a context manager
         with get_db() as db:
@@ -53,13 +69,13 @@ async def create_absen(
                 nama=nama,
                 lokasi=lokasi,
                 ranah=ranah,
-                detail_ranah=detail_ranah
+                detail_ranah=detail_ranah,
             )
 
             if is_duplicate:
                 raise HTTPException(
                     status_code=409,
-                    detail="Duplicate entry detected: Similar attendance record exists within 2 hours"
+                    detail="Duplicate entry detected: Similar attendance record exists within 2 hours",
                 )
 
             # Create AbsenPengajian instance
@@ -70,7 +86,7 @@ async def create_absen(
                 nama=nama,
                 lokasi=lokasi,
                 ranah=ranah,
-                detail_ranah=detail_ranah
+                detail_ranah=detail_ranah,
             )
 
             db.add(db_absen)
@@ -84,20 +100,22 @@ async def create_absen(
     except ValueError as e:
         raise HTTPException(
             status_code=422,
-            detail=f"Invalid date or time format. Date should be YYYY-MM-DD and time should be HH:MM. Error: {str(e)}"
+            detail=f"Invalid date or time format. Date should be YYYY-MM-DD and time should be HH:MM. Error: {str(e)}",
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"An error occurred: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
-@router.get("/", response_model=List[AbsenPengajianRead], dependencies=[Depends(verify_read_permission)])
+
+@router.get(
+    "/",
+    response_model=List[AbsenPengajianRead],
+    dependencies=[Depends(verify_read_permission)],
+)
 @cache(expire=600)  # Cache results for 10 minutes
 async def list_absen(
     tanggal: Optional[str] = None,
     acara: Optional[str] = None,
-    lokasi: Optional[str] = None
+    lokasi: Optional[str] = None,
 ):
     try:
         with get_db() as db:
@@ -107,16 +125,18 @@ async def list_absen(
             if tanggal:
                 try:
                     # Convert string date to datetime for comparison
-                    filter_date = datetime.strptime(tanggal, '%Y-%m-%d')
+                    filter_date = datetime.strptime(tanggal, "%Y-%m-%d")
                     # Compare only the date part
-                    query = query.filter(and_(
-                        AbsenPengajian.tanggal >= filter_date,
-                        AbsenPengajian.tanggal < filter_date + timedelta(days=1)
-                    ))
+                    query = query.filter(
+                        and_(
+                            AbsenPengajian.tanggal >= filter_date,
+                            AbsenPengajian.tanggal < filter_date + timedelta(days=1),
+                        )
+                    )
                 except ValueError:
                     raise HTTPException(
                         status_code=422,
-                        detail="Invalid date format. Date should be YYYY-MM-DD"
+                        detail="Invalid date format. Date should be YYYY-MM-DD",
                     )
 
             if acara:
@@ -132,12 +152,14 @@ async def list_absen(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"An error occurred: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
-@router.get("/{absen_id}", response_model=AbsenPengajianRead, dependencies=[Depends(verify_read_permission)])
+
+@router.get(
+    "/{absen_id}",
+    response_model=AbsenPengajianRead,
+    dependencies=[Depends(verify_read_permission)],
+)
 @cache(expire=300)  # Cache individual record lookups for 5 minutes
 async def get_absen(absen_id: int):
     try:
@@ -151,7 +173,4 @@ async def get_absen(absen_id: int):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"An error occurred: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
