@@ -87,9 +87,7 @@ for router, prefix, tags in routers:
 
 @app.get("/")
 async def root():
-    return {
-        "error": "Invalid access. This endpoint is intended for API only."
-    }
+    return {"error": "Invalid access. This endpoint is intended for API only."}
 
 
 if __name__ == "__main__":
