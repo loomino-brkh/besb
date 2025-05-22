@@ -3,6 +3,7 @@ from typing import Optional
 from sqlmodel import SQLModel, Field
 from pydantic import field_validator
 
+
 class AbsenPengajianBase(SQLModel):
     acara: str = Field(index=True)
     tanggal: datetime
@@ -12,29 +13,30 @@ class AbsenPengajianBase(SQLModel):
     ranah: str
     detail_ranah: str
 
-    @field_validator('jam_hadir')
+    @field_validator("jam_hadir")
     def validate_jam_hadir(cls, v):
         try:
             # Parse time string and reformat to ensure HH:mm format
-            parsed_time = datetime.strptime(v, '%H:%M')
-            return parsed_time.strftime('%H:%M')
+            parsed_time = datetime.strptime(v, "%H:%M")
+            return parsed_time.strftime("%H:%M")
         except ValueError:
-            raise ValueError('jam_hadir must be in HH:mm format')
+            raise ValueError("jam_hadir must be in HH:mm format")
+
 
 class AbsenPengajian(AbsenPengajianBase, table=True):
-    __table_args__ = {'extend_existing': True}
-    __tablename__:str = 'rec_absen_pengajian'
+    __table_args__ = {"extend_existing": True}
+    __tablename__: str = "rec_absen_pengajian"
     id: Optional[int] = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
+
 class AbsenPengajianCreate(AbsenPengajianBase):
     pass
+
 
 class AbsenPengajianRead(AbsenPengajianBase):
     id: int
     created_at: datetime
 
     class Config:
-        json_encoders = {
-            datetime: lambda dt: dt.strftime('%Y-%m-%d')
-        }
+        json_encoders = {datetime: lambda dt: dt.strftime("%Y-%m-%d")}
