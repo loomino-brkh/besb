@@ -4,7 +4,6 @@ from typing import List, Optional
 from core.auth import verify_read_permission, verify_write_permission
 from core.db import get_db
 from fastapi import APIRouter, Depends, Form, HTTPException
-from fastapi_cache.decorator import cache
 from schema.absen_pengajian_schema import AbsenPengajian, AbsenPengajianRead
 from sqlmodel import Session, and_, select
 
@@ -112,7 +111,6 @@ async def create_absen(
     response_model=List[AbsenPengajianRead],
     dependencies=[Depends(verify_read_permission)],
 )
-@cache(expire=600)  # Cache results for 10 minutes
 async def list_absen(
     tanggal: Optional[str] = None,
     acara: Optional[str] = None,
@@ -161,7 +159,6 @@ async def list_absen(
     response_model=AbsenPengajianRead,
     dependencies=[Depends(verify_read_permission)],
 )
-@cache(expire=300)  # Cache individual record lookups for 5 minutes
 async def get_absen(absen_id: int):
     try:
         with get_db() as db:

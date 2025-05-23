@@ -1,6 +1,5 @@
 from core.db import get_async_db
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi_cache.decorator import cache
 from schema.sesi_schema import Sesi
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -9,7 +8,6 @@ router = APIRouter()
 
 
 @router.get("/{acara}")
-@cache(expire=300)  # Cache for 5 minutes
 async def get_sesi_by_acara(acara: str, db: AsyncSession = Depends(get_async_db)):
     query = select(Sesi).where(Sesi.acara == acara)
     # Although diagnostics might suggest `exec`, runtime errors indicate `execute` is needed

@@ -2,7 +2,6 @@ from typing import Any, Dict, List, Optional, Sequence
 
 from core.db import get_async_db
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi_cache.decorator import cache
 from schema.data_materi_schema import DataMateri
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import Select
@@ -59,7 +58,6 @@ def build_query(
 
 @router.get("/{kategori}")
 @router.get("/{kategori}/{detail_kategori}")
-@cache(expire=300)  # Cache for 5 minutes
 async def get_data_materi(
     kategori: str,
     detail_kategori: Optional[str] = None,

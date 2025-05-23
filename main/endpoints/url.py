@@ -3,7 +3,6 @@ from typing import Optional
 from core.auth import verify_token
 from core.db import get_db_dependency
 from fastapi import APIRouter, Depends, Form, HTTPException
-from fastapi_cache.decorator import cache
 from fastapi_limiter.depends import RateLimiter
 from schema.url_schema import URL, URLResponse
 from sqlmodel import Session, select
@@ -12,7 +11,6 @@ router = APIRouter()
 
 
 @router.get("/{code}")
-@cache(expire=300)  # Cache for 5 minutes
 async def get_url(
     code: str, session: Session = Depends(get_db_dependency)
 ) -> Optional[URLResponse]:
