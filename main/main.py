@@ -67,8 +67,8 @@ app.add_middleware(
         "https://hd.brkh.work",
     ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["POST", "GET", "OPTIONS"],
+    allow_headers=["Authorization", "X-API-Key", "Content-Type"],
 )
 
 routers = [
