@@ -68,7 +68,7 @@ app.add_middleware(
     ],
     allow_credentials=True,
     allow_methods=["POST", "GET", "OPTIONS"],
-    allow_headers=["Authorization", "X-API-Key", "Content-Type"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 routers = [
