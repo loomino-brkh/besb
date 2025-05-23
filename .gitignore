@@ -74,3 +74,4 @@ memory-bank/
 pyrightconfig.json
 
 pyproject.toml
+.requirements.txt
