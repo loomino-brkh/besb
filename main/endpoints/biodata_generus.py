@@ -159,6 +159,13 @@ async def create_biodata(
         assert jenis_kelamin is not None
         assert daerah is not None
 
+        # Validate hobi doesn't contain square brackets
+        if hobi and ("[" in hobi or "]" in hobi):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid hobi format: square brackets are not allowed",
+            )
+
         # Parse hobi from JSON string to dictionary if it's a string
         if hobi is None:
             hobi_dict = None
